@@ -9,8 +9,8 @@ WORKDIR /app
 # Copy package management files
 COPY package.json pnpm-lock.yaml* ./
 
-# Install all dependencies (including devDependencies needed for build)
-RUN pnpm install
+# Install all dependencies (ignoring scripts to avoid ERR_PNPM_IGNORED_BUILDS)
+RUN pnpm install --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -32,8 +32,8 @@ COPY package.json pnpm-lock.yaml* ./
 # Copy built assets from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Install ONLY production dependencies
-RUN pnpm install --prod
+# Install ONLY production dependencies (ignoring scripts to avoid ERR_PNPM_IGNORED_BUILDS)
+RUN pnpm install --prod --ignore-scripts
 
 # Expose port (Cloud Run sets process.env.PORT, defaults to 8080)
 EXPOSE 8080
