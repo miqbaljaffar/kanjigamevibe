@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    // User Profile Validation
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'totalCorrect', 'currentStreak', 'mascotTier'])
+        && data.uid == request.auth.uid
+        && data.totalCorrect is int && data.totalCorrect >= 0
+        && data.currentStreak is int && data.currentStreak >= 0
+        && data.mascotTier is int && data.mascotTier >= 0 && data.mascotTier <= 4
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 50))
+        && (!('xp' in data) || (data.xp is int && data.xp >= 0))
+        && data.keys().size() <= 10; // Prevent shadow fields
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming()) && isValidId(userId);
+      allow update: if isOwner(userId) && isValidUser(incoming())
+        && (
+          // Action: Progress Update
+          incoming().diff(existing()).affectedKeys().hasOnly(['totalCorrect', 'currentStreak', 'highestStreak', 'lastActiveDate', 'mascotTier', 'xp', 'displayName'])
+        );
+      allow delete: if false; // Users shouldn't delete profiles easily
+    }
+
+    // Game Logs Validation
+    function isValidLog(data) {
+      return data.keys().hasAll(['userId', 'mode', 'score', 'timestamp'])
+        && data.userId == request.auth.uid
+        && data.score is int
+        && data.mode is string
+        && data.timestamp == request.time
+        && data.keys().size() <= 8;
+    }
+
+    match /logs/{logId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidLog(incoming()) && isValidId(logId);
+      allow update, delete: if false; // Logs are immutable
+    }
+
+  }
+}

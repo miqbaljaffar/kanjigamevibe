@@ -1,0 +1,6 @@
+{
+  "name": "Neon JLPT Arcade",
+  "description": "High-speed interactive Kanji quiz game for all JLPT levels with AI-powered scanning, workplace chat roleplay, and evolving cyberpunk mascot.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

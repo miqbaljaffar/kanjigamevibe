@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Press+Start+2P&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  --font-arcade: "Press Start 2P", system-ui, sans-serif;
+}
+
+:root {
+  --neon-pink: #ff00ff;
+  --neon-cyan: #00ffff;
+  --neon-yellow: #ffff00;
+  --bg-dark: #0a0010;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: white;
+  overflow-x: hidden;
+}
+
+@layer components {
+  .neon-border {
+    border: 2px solid var(--neon-pink);
+    box-shadow: 0 0 10px var(--neon-pink), inset 0 0 5px var(--neon-pink);
+  }
+  
+  .neon-text-pink {
+    color: var(--neon-pink);
+    text-shadow: 0 0 5px var(--neon-pink);
+  }
+
+  .neon-text-cyan {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 5px var(--neon-cyan);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+  }
+}
+

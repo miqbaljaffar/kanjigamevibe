@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user progress, streaks, and mascot evolution state.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "totalCorrect": { "type": "integer" },
+        "highestStreak": { "type": "integer" },
+        "currentStreak": { "type": "integer" },
+        "lastActiveDate": { "type": "string", "format": "date-time" },
+        "mascotTier": { "type": "integer", "enum": [0, 1, 2, 3, 4] },
+        "xp": { "type": "integer" }
+      },
+      "required": ["uid", "totalCorrect", "currentStreak", "mascotTier"]
+    },
+    "GameLog": {
+      "title": "Game Session Log",
+      "description": "Stores results of individual quiz sessions.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "mode": { "type": "string" },
+        "score": { "type": "integer" },
+        "correctCount": { "type": "integer" },
+        "totalCount": { "type": "integer" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "mode", "score", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile and progress data."
+    },
+    "/logs/{logId}": {
+      "schema": "GameLog",
+      "description": "Audit trail for game sessions."
+    }
+  }
+}
