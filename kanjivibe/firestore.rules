@@ -24,18 +24,23 @@ service cloud.firestore {
         && data.totalCorrect is int && data.totalCorrect >= 0
         && data.currentStreak is int && data.currentStreak >= 0
         && data.mascotTier is int && data.mascotTier >= 0 && data.mascotTier <= 4
-        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 50))
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100))
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500))
+        && (!('jlptLevel' in data) || (data.jlptLevel is string && data.jlptLevel.size() <= 2))
         && (!('xp' in data) || (data.xp is int && data.xp >= 0))
-        && data.keys().size() <= 10; // Prevent shadow fields
+        && (!('highestStreak' in data) || (data.highestStreak is int && data.highestStreak >= 0))
+        && (!('lastActiveDate' in data) || data.lastActiveDate is string)
+        && data.keys().size() <= 15; // Prevent shadow fields
     }
 
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isOwner(userId) && isValidUser(incoming()) && isValidId(userId);
       allow update: if isOwner(userId) && isValidUser(incoming())
         && (
           // Action: Progress Update
-          incoming().diff(existing()).affectedKeys().hasOnly(['totalCorrect', 'currentStreak', 'highestStreak', 'lastActiveDate', 'mascotTier', 'xp', 'displayName'])
+          incoming().diff(existing()).affectedKeys().hasOnly(['totalCorrect', 'currentStreak', 'highestStreak', 'lastActiveDate', 'mascotTier', 'xp', 'displayName', 'photoURL', 'jlptLevel'])
         );
       allow delete: if false; // Users shouldn't delete profiles easily
     }
