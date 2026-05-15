@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 
 # Install all dependencies (including devDependencies needed for build)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy the rest of the application code
 COPY . .
@@ -33,7 +33,7 @@ COPY package.json pnpm-lock.yaml* ./
 COPY --from=builder /app/dist ./dist
 
 # Install ONLY production dependencies
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod
 
 # Expose port (Cloud Run sets process.env.PORT, defaults to 8080)
 EXPOSE 8080
