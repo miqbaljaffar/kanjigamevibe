@@ -34,12 +34,30 @@ export default function App() {
   const [showLevelSelect, setShowLevelSelect] = useState(!localStorage.getItem('neon_jlpt_level'));
   
   const [mode, setMode] = useState<GameMode>('kanji-meaning');
-  const [difficulty] = useState<Difficulty>('normal');
+  // PERBAIKAN: Tambahkan setDifficulty agar bisa diubah dari dalam game
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
 
   const game = useGame(mode, difficulty, jlptLevel);
   const statsUpdateRef = useRef(false); // Guard against double-fire
 
-  // Update stats after game ends (Save to LocalStorage instead of Firestore)
+  // Audio Ref untuk mengontrol playback
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Effect untuk mengontrol musik berdasarkan gameState dan layar saat ini
+  useEffect(() => {
+    if (audioRef.current) {
+      // Musik dimainkan saat game TIDAK dalam keadaan 'playing' (saat menjawab soal)
+      // dan tidak sedang dalam layar pemilihan kesulitan (bisa disesuaikan)
+      if (game.gameState === 'playing') {
+        audioRef.current.pause();
+      } else {
+        // Coba play musik (browser mungkin menolak autoplay sebelum user interaksi)
+        audioRef.current.play().catch(e => console.log("Auto-play prevented by browser:", e));
+      }
+    }
+  }, [game.gameState]);
+
+  // Update stats after game ends (Save to LocalStorage)
   useEffect(() => {
     if (game.gameState === 'ended' && !statsUpdateRef.current) {
       statsUpdateRef.current = true;
@@ -81,15 +99,28 @@ export default function App() {
     localStorage.setItem('neon_jlpt_level', level);
   };
 
+  // Fungsi tambahan saat start dari landing agar audio mulai jalan
+  const handleStartApp = () => {
+    setShowLanding(false);
+    if (audioRef.current) {
+        audioRef.current.play().catch(e => console.log("Play failed after click:", e));
+    }
+  }
+
   return (
     <div className="min-h-screen relative">
       <Sakura />
+
+      {/* Komponen Audio Background */}
+      {/* Ubah '/bgm.mp3' dengan path file musik Anda. Pastikan file ada di folder 'public' */}
+      <audio ref={audioRef} src="/assets/スタートボタンの向こう側.mp3" loop />
 
       <main className="relative z-10">
         <AnimatePresence mode="wait">
           {showLanding ? (
             <motion.div key="landing" exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-              <LandingView onStart={() => setShowLanding(false)} />
+              {/* Gunakan handleStartApp yang baru untuk memastikan audio ter-trigger */}
+              <LandingView onStart={handleStartApp} />
             </motion.div>
           ) : (
             <div className="pt-20">
@@ -111,6 +142,9 @@ export default function App() {
                   game={game}
                   userStats={userStats}
                   setMode={setMode}
+                  // PERBAIKAN: Kirim difficulty & setDifficulty ke GameUI
+                  difficulty={difficulty}
+                  setDifficulty={setDifficulty}
                 />
               )}
               {view === 'chat' && (
