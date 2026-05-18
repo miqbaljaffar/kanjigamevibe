@@ -11,13 +11,10 @@ import {
 import { Mascot } from '../components/Mascot';
 import { JLPTLevel } from '../hooks/useGame';
 import { cn } from '../lib/utils';
-import { User } from 'firebase/auth';
 
 interface DashboardViewProps {
-  user: User | null;
   userStats: any;
-  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' | 'leaderboard') => void;
-  handleLogout: () => void;
+  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan') => void;
   showLevelSelect: boolean;
   setShowLevelSelect: (show: boolean) => void;
   jlptLevel: JLPTLevel;
@@ -26,10 +23,8 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({
-  user,
   userStats,
   setView,
-  handleLogout,
   showLevelSelect,
   setShowLevelSelect,
   jlptLevel,
@@ -45,7 +40,6 @@ export function DashboardView({
     >
       <header className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-6 sm:gap-4 mb-12 text-center sm:text-left">
         <div className="order-2 sm:order-1 flex items-center gap-4">
-          <img src={user?.photoURL || ''} alt="Profile" className="w-12 h-12 rounded-full border-2 border-pink-500 hidden sm:block" />
           <div>
             <h1 className="text-3xl sm:text-4xl font-arcade neon-text-pink mb-2">NEON JLPT ARCADE</h1>
             <p className="text-cyan-400 font-mono tracking-widest uppercase text-[10px] sm:text-sm">THE ULTIMATE CYBER NIHONGO TRAINING</p>
@@ -60,9 +54,6 @@ export function DashboardView({
             <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
             <span className="font-arcade text-[8px] sm:text-xs text-nowrap">{userStats?.totalCorrect || 0} SCORE</span>
           </div>
-          <button onClick={handleLogout} className="glass-card p-2 sm:p-3 border-red-500/50 hover:bg-red-500/20 text-[8px] sm:text-xs font-arcade text-red-400">
-            LOGOUT
-          </button>
         </div>
       </header>
 
@@ -166,20 +157,6 @@ export function DashboardView({
                   <p className="text-gray-400 text-sm">Turn images into custom boss fights.</p>
                 </div>
                 <ChevronRight className="ml-auto w-6 h-6 text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-
-              <button
-                onClick={() => setView('leaderboard')}
-                className="glass-card p-6 flex items-center gap-6 hover:bg-purple-500/20 transition-all group text-left"
-              >
-                <div className="p-4 bg-purple-500/20 rounded-xl group-hover:bg-purple-500/40 transition-colors">
-                  <Trophy className="w-8 h-8 text-purple-500" />
-                </div>
-                <div>
-                  <h4 className="text-xl font-bold">GLOBAL LEADERBOARD</h4>
-                  <p className="text-gray-400 text-sm">See the top players in the Neo-Neko network.</p>
-                </div>
-                <ChevronRight className="ml-auto w-6 h-6 text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
             </div>
           </motion.div>

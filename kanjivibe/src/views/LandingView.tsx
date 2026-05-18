@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Gamepad2, MessageCircle, Camera, Trophy, Brain, Zap, Globe, BookOpen, ChevronDown } from 'lucide-react';
+import { Gamepad2, MessageCircle, Camera, Brain, Zap, Globe, BookOpen, ChevronDown } from 'lucide-react';
 
 interface LandingViewProps {
   onStart: () => void;
 }
 
-function AnimatedSection({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function AnimatedSection({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number; key?: React.Key }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
@@ -44,14 +44,7 @@ const FEATURES = [
     desc: 'Foto kanji di sekitarmu — AI akan mengenali dan membuat quiz khusus dari kanji yang terdeteksi.',
     color: 'from-yellow-400 to-orange-500',
     glow: 'shadow-[0_0_30px_rgba(255,255,0,0.3)]',
-  },
-  {
-    icon: Trophy,
-    title: 'Leaderboard',
-    desc: 'Bersaing dengan pemain lain di global leaderboard. Raih streak tertinggi dan naik peringkat!',
-    color: 'from-green-400 to-emerald-500',
-    glow: 'shadow-[0_0_30px_rgba(0,255,128,0.3)]',
-  },
+  }
 ];
 
 const JLPT_LEVELS = [
@@ -238,11 +231,11 @@ export function LandingView({ onStart }: LandingViewProps) {
               SEMUA YANG KAMU<br /><span className="neon-text-cyan">BUTUHKAN</span>
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto text-sm sm:text-base">
-              Empat fitur utama yang dirancang untuk memaksimalkan proses belajar bahasa Jepang.
+              Fitur utama yang dirancang untuk memaksimalkan proses belajar bahasa Jepang.
             </p>
           </AnimatedSection>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             {FEATURES.map((feature, i) => (
               <AnimatedSection key={i} delay={i * 0.1}>
                 <motion.div
@@ -321,9 +314,9 @@ export function LandingView({ onStart }: LandingViewProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {[
-              { step: '01', title: 'Login', desc: 'Masuk dengan Google Account untuk menyimpan progress dan bersaing di leaderboard.', emoji: '🔑' },
-              { step: '02', title: 'Pilih Level', desc: 'Pilih level JLPT (N5-N1) dan mode quiz yang sesuai dengan kemampuanmu.', emoji: '🎯' },
-              { step: '03', title: 'Main!', desc: 'Jawab quiz, chat dengan Sacho, scan kanji — kumpulkan XP dan naik peringkat!', emoji: '🎮' },
+              { step: '01', title: 'Pilih Level', desc: 'Pilih target level JLPT (N5-N1) yang sesuai dengan kemampuanmu.', emoji: '🎯' },
+              { step: '02', title: 'Pilih Mode', desc: 'Pilih mode permainan mulai dari quiz kanji hingga sacho chat.', emoji: '🧠' },
+              { step: '03', title: 'Main!', desc: 'Jawab pertanyaan, kumpulkan XP, dan tingkatkan maskot belajarmu!', emoji: '🎮' },
             ].map((item, i) => (
               <AnimatedSection key={i} delay={i * 0.15}>
                 <div className="text-center">
@@ -370,7 +363,7 @@ export function LandingView({ onStart }: LandingViewProps) {
       <footer className="border-t border-white/5 py-8 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-xs text-gray-600 font-mono">
-            NEON JLPT ARCADE © 2026 • Built with 💜 using React, Gemini AI & Firebase
+            NEON JLPT ARCADE
           </p>
         </div>
       </footer>

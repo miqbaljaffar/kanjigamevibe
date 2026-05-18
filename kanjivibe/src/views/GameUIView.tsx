@@ -52,7 +52,11 @@ export function GameUIView({
             {(['kanji-meaning', 'meaning-kanji', 'hiragana-meaning', 'bunpou', 'listening'] as GameMode[]).map(m => (
               <button
                 key={m}
-                onClick={() => { setMode(m); game.startGame(); }}
+                onClick={() => { 
+                  setMode(m); 
+                  // FIX: Explicitly pass the mode 'm' to startGame bypassing the async state delay
+                  game.startGame(undefined, undefined, m); 
+                }}
                 className="p-3 sm:p-4 border border-pink-500/30 rounded-lg hover:bg-pink-500/20 transition-all capitalize text-sm sm:text-base"
               >
                 {m.replace('-', ' ')}

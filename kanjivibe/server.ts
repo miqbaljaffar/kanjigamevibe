@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 8080;
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
-  crossOriginOpenerPolicy: false,
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
 
 // Gzip compression for all responses

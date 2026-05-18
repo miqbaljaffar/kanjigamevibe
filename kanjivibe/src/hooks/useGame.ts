@@ -24,7 +24,6 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIMER_MAP[difficulty]);
   const [gameState, setGameState] = useState<'idle' | 'loading' | 'playing' | 'feedback' | 'ended'>('idle');
   const [lastFeedback, setLastFeedback] = useState<{ correct: boolean, points: number } | null>(null);
@@ -33,7 +32,8 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchQuestions = useCallback(async (customQuestions?: Question[], customBossImage?: string | null) => {
+  // 1. Added startMode parameter here
+  const fetchQuestions = useCallback(async (customQuestions?: Question[], customBossImage?: string | null, startMode?: GameMode) => {
     if (customQuestions) {
       setQuestions(customQuestions);
       setBossImage(customBossImage || null);
@@ -46,7 +46,8 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, count: 10, level })
+        // 2. Use startMode if provided, otherwise fallback to the current mode state
+        body: JSON.stringify({ mode: startMode || mode, count: 10, level })
       });
       const data = await res.json();
       setQuestions(data);
@@ -57,14 +58,15 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     }
   }, [mode, level]);
 
-  const startGame = (customQuestions?: Question[], customBossImage?: string | null) => {
+  // 3. Added startMode parameter here
+  const startGame = (customQuestions?: Question[], customBossImage?: string | null, startMode?: GameMode) => {
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     setCurrentIndex(0);
     setScore(0);
     setStreak(0);
-    setCorrectAnswers(0);
     if (!customBossImage) setBossImage(null);
-    fetchQuestions(customQuestions, customBossImage);
+    // 4. Pass startMode down to fetchQuestions
+    fetchQuestions(customQuestions, customBossImage, startMode);
   };
 
   const handleAnswer = (index: number | null) => {
@@ -82,7 +84,6 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
 
       setScore(s => s + points);
       setStreak(s => s + 1);
-      setCorrectAnswers(c => c + 1);
     } else {
       setStreak(0); // Penalty
     }
@@ -143,13 +144,12 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     currentQuestion: questions[currentIndex],
     score,
     streak,
-    correctAnswers,
     timeLeft,
     gameState,
     lastFeedback,
     bossImage,
     startGame,
     handleAnswer,
-    restart: () => startGame()
+    restart: () => startGame() // restart relies on the current state, which is fine!
   };
 }
