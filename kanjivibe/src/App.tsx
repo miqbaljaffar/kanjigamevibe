@@ -34,7 +34,6 @@ export default function App() {
   const [showLevelSelect, setShowLevelSelect] = useState(!localStorage.getItem('neon_jlpt_level'));
   
   const [mode, setMode] = useState<GameMode>('kanji-meaning');
-  // PERBAIKAN: Tambahkan setDifficulty agar bisa diubah dari dalam game
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
 
   const game = useGame(mode, difficulty, jlptLevel);
@@ -43,19 +42,18 @@ export default function App() {
   // Audio Ref untuk mengontrol playback
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Effect untuk mengontrol musik berdasarkan gameState dan layar saat ini
+  // PERBAIKAN: Effect untuk mengontrol musik berdasarkan layar saat ini (view)
   useEffect(() => {
     if (audioRef.current) {
-      // Musik dimainkan saat game TIDAK dalam keadaan 'playing' (saat menjawab soal)
-      // dan tidak sedang dalam layar pemilihan kesulitan (bisa disesuaikan)
-      if (game.gameState === 'playing') {
+      // Musik dimatikan HANYA saat berada di fitur Sacho Chat
+      if (view === 'chat') {
         audioRef.current.pause();
       } else {
-        // Coba play musik (browser mungkin menolak autoplay sebelum user interaksi)
+        // Play musik di layar lainnya (Dashboard, Scan, Game)
         audioRef.current.play().catch(e => console.log("Auto-play prevented by browser:", e));
       }
     }
-  }, [game.gameState]);
+  }, [view]); // Dependency diubah menjadi 'view'
 
   // Update stats after game ends (Save to LocalStorage)
   useEffect(() => {
@@ -119,7 +117,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           {showLanding ? (
             <motion.div key="landing" exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-              {/* Gunakan handleStartApp yang baru untuk memastikan audio ter-trigger */}
+              {/* Gunakan handleStartApp untuk memastikan audio ter-trigger */}
               <LandingView onStart={handleStartApp} />
             </motion.div>
           ) : (
@@ -142,7 +140,6 @@ export default function App() {
                   game={game}
                   userStats={userStats}
                   setMode={setMode}
-                  // PERBAIKAN: Kirim difficulty & setDifficulty ke GameUI
                   difficulty={difficulty}
                   setDifficulty={setDifficulty}
                 />
