@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Camera } from 'lucide-react';
+import { ArrowLeft, Camera, Image as ImageIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { JLPTLevel } from '../hooks/useGame';
 
@@ -12,19 +12,88 @@ interface ScanViewProps {
 
 export function ScanView({ setView, jlptLevel, game }: ScanViewProps) {
   const [isScanning, setIsScanning] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Menyimpan base64 gambar yang di-upload untuk ditampilkan sebagai background scanner
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  // Membuat data telemetry hexadecimal acak yang berubah setiap 250ms agar terlihat seperti proses hacking nyata
+  const [telemetry, setTelemetry] = useState('0x000000');
+  
+  // Menggunakan dua Ref terpisah untuk Kamera dan Galeri
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  const handleButtonClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+  // Menjalankan generator hex data acak saat scanning sedang aktif
+  useEffect(() => {
+    if (!isScanning) return;
+    
+    const interval = setInterval(() => {
+      const hex = Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase().padStart(6, '0');
+      setTelemetry(`0x${hex}`);
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [isScanning]);
+
+  // Handler utama untuk memproses file gambar dari kedua input
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Membaca file gambar untuk dijadikan preview background saat scanning
+    const reader = new FileReader();
+    setIsScanning(true);
+
+    reader.onload = async (rv) => {
+      const base64 = rv.target?.result as string;
+      setPreviewImage(base64); // Set preview gambar agar tampil di latar belakang scanner
+
+      try {
+        const res = await fetch('/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64, level: jlptLevel })
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (data && data.questions) {
+          setView('game');
+          game.startGame(
+            data.questions, 
+            data.bossImageBase64 ? `data:image/jpeg;base64,${data.bossImageBase64}` : null
+          );
+        } else {
+          throw new Error("Invalid or empty data received from the AI.");
+        }
+
+      } catch (error: any) {
+        console.error("Scan failed:", error);
+        alert("Failed to process image: " + error.message);
+      } finally {
+        setIsScanning(false);
+        setPreviewImage(null); // Reset preview setelah pemindaian selesai
+        e.target.value = '';
+      }
+    };
+
+    reader.onerror = () => {
+      alert("Failed to read the image file from your device.");
+      setIsScanning(false);
+      setPreviewImage(null);
+      e.target.value = '';
+    };
+
+    reader.readAsDataURL(file);
   };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-2xl mx-auto p-4 sm:p-6" // Penyesuaian padding untuk mobile
+      className="max-w-2xl mx-auto p-4 sm:p-6"
     >
       <header className="flex items-center gap-4 mb-4 sm:mb-6 relative z-10">
         <button onClick={() => setView('dashboard')} className="p-2 glass-card hover:bg-white/10 cursor-pointer">
@@ -33,19 +102,77 @@ export function ScanView({ setView, jlptLevel, game }: ScanViewProps) {
         <h2 className="text-lg sm:text-xl font-bold uppercase tracking-widest font-arcade text-yellow-500">Boss Scanner</h2>
       </header>
 
-      {/* Perubahan Utama: 
-        1. Mengganti aspect-video menjadi min-h-[60vh] sm:aspect-video agar di HP bisa memanjang sesuai konten.
-        2. Menyesuaikan padding (p-6 sm:p-8)
-      */}
       <div className="glass-card min-h-[60vh] sm:aspect-video relative flex flex-col items-center justify-center p-6 sm:p-8 overflow-hidden">
+        
+        {/* LAYAR LOADING PEMINDAIAN CYBERPUNK DRAMATIS */}
         {isScanning && (
-          <div className="absolute inset-0 bg-black/80 z-20 flex flex-col items-center justify-center p-4 text-center">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="font-arcade text-yellow-500 text-xs sm:text-sm">ANALYZING KANJI & GENERATING BOSS...</p>
+          <div className="absolute inset-0 bg-black/95 z-20 flex flex-col items-center justify-center p-4 text-center">
+            
+            {/* Tampilkan gambar yang diupload user secara samar dengan filter matrix */}
+            {previewImage && (
+              <img
+                src={previewImage}
+                alt="Scanning..."
+                className="absolute inset-0 w-full h-full object-cover opacity-20 filter brightness-50 contrast-125 saturate-150 grayscale-0 blur-[1px] pointer-events-none"
+              />
+            )}
+
+            {/* Efek Garis Monitor CRT Scanline Retro */}
+            <div 
+              className="absolute inset-0 pointer-events-none opacity-20 z-21"
+              style={{
+                backgroundImage: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%)',
+                backgroundSize: '100% 4px'
+              }}
+            />
+
+            {/* Animasi Garis Laser Scanline Neon yang Bergerak Naik-Turun */}
+            <motion.div
+              initial={{ y: '-5%' }}
+              animate={{ y: '105%' }}
+              transition={{
+                repeat: Infinity,
+                repeatType: "reverse",
+                duration: 2.2,
+                ease: "easeInOut"
+              }}
+              className="absolute left-0 right-0 h-[4px] bg-yellow-500 shadow-[0_0_15px_#eab308,0_0_30px_#eab308] z-22"
+            />
+
+            {/* Data HUD / Telemetri Cyberpunk di Sudut Layar */}
+            <div className="absolute top-4 left-4 text-left font-mono text-[9px] sm:text-[11px] text-yellow-500/80 tracking-wider z-22 select-none">
+              <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping mr-2" />
+              <span className="text-red-500 font-bold mr-1">SYS:</span> CAPTURING
+              <br />
+              <span className="text-gray-400">DATA_FLOW:</span> {telemetry}
+            </div>
+
+            <div className="absolute top-4 right-4 text-right font-mono text-[9px] sm:text-[11px] text-yellow-500/80 tracking-wider z-22 select-none">
+              <span>TARGET_LEVEL:</span> {jlptLevel}
+              <br />
+              <span className="text-cyan-400 font-bold">MATRIX:</span> STABLE
+            </div>
+
+            <div className="absolute bottom-4 left-4 text-left font-mono text-[9px] sm:text-[10px] text-gray-500 tracking-wider z-22 select-none hidden sm:block">
+              <span>CH_BAUD: 9600 // PORT: A3</span>
+              <br />
+              <span>OCR RECOGNITION ACTIVE</span>
+            </div>
+
+            {/* Indikator Loading Tengah */}
+            <div className="relative z-23 flex flex-col items-center justify-center bg-black/75 p-6 sm:p-8 rounded-xl border border-yellow-500/30 backdrop-blur-md max-w-sm">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(234,179,8,0.3)]" />
+              <p className="font-arcade text-yellow-500 text-xs sm:text-sm tracking-widest animate-pulse">
+                DECRYPTING KANJI...
+              </p>
+              <p className="font-mono text-gray-500 text-[10px] mt-2 uppercase tracking-wide">
+                Configuring Boss Battle Vector
+              </p>
+            </div>
           </div>
         )}
         
-        {/* Dekorasi sudut dipertahankan tapi disesuaikan */}
+        {/* Dekorasi Bingkai Sudut Kuning */}
         <div className="absolute inset-0 border-2 border-yellow-500/50 flex items-center justify-center pointer-events-none">
           <div className="w-12 h-12 sm:w-20 sm:h-20 border-t-2 border-l-2 border-yellow-500 absolute top-2 left-2 sm:top-4 sm:left-4" />
           <div className="w-12 h-12 sm:w-20 sm:h-20 border-t-2 border-r-2 border-yellow-500 absolute top-2 right-2 sm:top-4 sm:right-4" />
@@ -53,83 +180,68 @@ export function ScanView({ setView, jlptLevel, game }: ScanViewProps) {
           <div className="w-12 h-12 sm:w-20 sm:h-20 border-b-2 border-r-2 border-yellow-500 absolute bottom-2 right-2 sm:bottom-4 sm:right-4" />
         </div>
 
-        <Camera 
-          onClick={handleButtonClick}
-          className="w-12 h-12 sm:w-16 sm:h-16 text-yellow-500 mb-4 opacity-50 cursor-pointer hover:opacity-100 transition-opacity relative z-10" 
-        />
+        {/* Gunakan wrapper tombol agar memicu kamera secara intuitif */}
+        <div className="flex gap-4 mb-4 relative z-10">
+          <Camera 
+            onClick={() => cameraInputRef.current?.click()}
+            className="w-10 h-10 sm:w-12 sm:h-12 text-yellow-500 opacity-60 cursor-pointer hover:opacity-100 transition-opacity" 
+          />
+          <ImageIcon 
+            onClick={() => galleryInputRef.current?.click()}
+            className="w-10 h-10 sm:w-12 sm:h-12 text-yellow-500 opacity-60 cursor-pointer hover:opacity-100 transition-opacity" 
+          />
+        </div>
         
-        {/* Teks dibuat lebih fleksibel */}
         <p className="text-center text-gray-400 mb-6 relative z-10 text-sm sm:text-base max-w-[90%]">
-          Capture Japanese text from packaging, menus, or books to generate a high-level boss fight.
+          Capture Japanese text using your camera or choose an image from your gallery to generate a boss battle.
         </p>
 
-        <button 
-          onClick={handleButtonClick}
-          disabled={isScanning}
-          className={cn(
-            "cursor-pointer bg-yellow-500 text-black font-arcade px-6 py-3 sm:px-8 sm:py-3 text-sm sm:text-base rounded hover:bg-yellow-400 transition-all relative z-10 w-full max-w-xs",
-            isScanning && "opacity-50 pointer-events-none"
-          )}
-        >
-          {isScanning ? 'SCANNING...' : 'SCAN IMAGE'}
-        </button>
+        {/* DUA TOMBOL PILIHAN: KAMERA & GALERI */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md justify-center relative z-10 px-4">
+          <button 
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={isScanning}
+            className={cn(
+              "cursor-pointer bg-yellow-500 text-black font-arcade px-6 py-3 text-xs sm:text-sm rounded hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 flex-1 shadow-[0_4px_10px_rgba(234,179,8,0.2)]",
+              isScanning && "opacity-50 pointer-events-none"
+            )}
+          >
+            <Camera className="w-4 h-4" />
+            {isScanning ? 'SCANNING...' : 'TAKE PHOTO'}
+          </button>
 
+          <button 
+            onClick={() => galleryInputRef.current?.click()}
+            disabled={isScanning}
+            className={cn(
+              "cursor-pointer bg-transparent border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 font-arcade px-6 py-3 text-xs sm:text-sm rounded transition-all flex items-center justify-center gap-2 flex-1",
+              isScanning && "opacity-50 pointer-events-none"
+            )}
+          >
+            <ImageIcon className="w-4 h-4" />
+            {isScanning ? 'SCANNING...' : 'FROM GALLERY'}
+          </button>
+        </div>
+
+        {/* INPUT 1: KHUSUS KAMERA (Menggunakan capture="environment") */}
         <input
-          ref={fileInputRef}
+          ref={cameraInputRef}
           type="file"
           accept="image/*"
           capture="environment" 
           className="hidden"
           disabled={isScanning}
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
+          onChange={handleFileChange}
+        />
 
-            setIsScanning(true);
-            const reader = new FileReader();
-
-            reader.onload = async (rv) => {
-              const base64 = rv.target?.result as string;
-              try {
-                const res = await fetch('/api/scan', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ image: base64, level: jlptLevel })
-                });
-
-                if (!res.ok) {
-                  throw new Error(`Server error: ${res.status}`);
-                }
-
-                const data = await res.json();
-
-                if (data && data.questions) {
-                  setView('game');
-                  game.startGame(
-                    data.questions, 
-                    data.bossImageBase64 ? `data:image/jpeg;base64,${data.bossImageBase64}` : null
-                  );
-                } else {
-                  throw new Error("Invalid or empty data received from the AI.");
-                }
-
-              } catch (error: any) {
-                console.error("Scan failed:", error);
-                alert("Failed to process image: " + error.message);
-              } finally {
-                setIsScanning(false);
-                e.target.value = '';
-              }
-            };
-
-            reader.onerror = () => {
-              alert("Failed to read the image file from your device.");
-              setIsScanning(false);
-              e.target.value = '';
-            };
-
-            reader.readAsDataURL(file);
-          }}
+        {/* INPUT 2: KHUSUS GALERI (Tanpa capture) */}
+        <input
+          ref={galleryInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={isScanning}
+          onChange={handleFileChange}
         />
       </div>
     </motion.div>
