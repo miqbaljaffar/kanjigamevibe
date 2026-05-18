@@ -113,7 +113,7 @@ export default function App() {
 
       {/* Komponen Audio Background */}
       {/* Ubah '/bgm.mp3' dengan path file musik Anda. Pastikan file ada di folder 'public' */}
-      <audio ref={audioRef} src="/assets/スタートボタンの向こう側.mp3" loop />
+      <audio ref={audioRef} src="/bgm.mp3" loop />
 
       <main className="relative z-10">
         <AnimatePresence mode="wait">
