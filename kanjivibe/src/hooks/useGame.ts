@@ -24,12 +24,14 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIMER_MAP[difficulty]);
   const [gameState, setGameState] = useState<'idle' | 'loading' | 'playing' | 'feedback' | 'ended'>('idle');
   const [lastFeedback, setLastFeedback] = useState<{ correct: boolean, points: number } | null>(null);
   const [bossImage, setBossImage] = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchQuestions = useCallback(async (customQuestions?: Question[], customBossImage?: string | null) => {
     if (customQuestions) {
@@ -56,9 +58,11 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
   }, [mode, level]);
 
   const startGame = (customQuestions?: Question[], customBossImage?: string | null) => {
+    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     setCurrentIndex(0);
     setScore(0);
     setStreak(0);
+    setCorrectAnswers(0);
     if (!customBossImage) setBossImage(null);
     fetchQuestions(customQuestions, customBossImage);
   };
@@ -78,6 +82,7 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
 
       setScore(s => s + points);
       setStreak(s => s + 1);
+      setCorrectAnswers(c => c + 1);
     } else {
       setStreak(0); // Penalty
     }
@@ -86,8 +91,9 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     setGameState('feedback');
 
     if (timerRef.current) clearInterval(timerRef.current);
+    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
 
-    setTimeout(() => {
+    feedbackTimeoutRef.current = setTimeout(() => {
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(c => c + 1);
         setTimeLeft(TIMER_MAP[difficulty]);
@@ -97,6 +103,12 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
       }
     }, 2000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (gameState === 'playing') {
@@ -131,6 +143,7 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     currentQuestion: questions[currentIndex],
     score,
     streak,
+    correctAnswers,
     timeLeft,
     gameState,
     lastFeedback,

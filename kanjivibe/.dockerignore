@@ -7,3 +7,8 @@ README.md
 Dockerfile
 .dockerignore
 .vscode
+.env.example
+pnpm-lock.yaml.*
+security_spec.md
+firebase-applet-config.json
+firebase-blueprint.json

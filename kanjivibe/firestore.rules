@@ -29,6 +29,7 @@ service cloud.firestore {
         && (!('jlptLevel' in data) || (data.jlptLevel is string && data.jlptLevel.size() <= 2))
         && (!('xp' in data) || (data.xp is int && data.xp >= 0))
         && (!('highestStreak' in data) || (data.highestStreak is int && data.highestStreak >= 0))
+        && (!('dailyStreak' in data) || (data.dailyStreak is int && data.dailyStreak >= 0))
         && (!('lastActiveDate' in data) || data.lastActiveDate is string)
         && data.keys().size() <= 15; // Prevent shadow fields
     }
@@ -40,7 +41,7 @@ service cloud.firestore {
       allow update: if isOwner(userId) && isValidUser(incoming())
         && (
           // Action: Progress Update
-          incoming().diff(existing()).affectedKeys().hasOnly(['totalCorrect', 'currentStreak', 'highestStreak', 'lastActiveDate', 'mascotTier', 'xp', 'displayName', 'photoURL', 'jlptLevel'])
+          incoming().diff(existing()).affectedKeys().hasOnly(['totalCorrect', 'currentStreak', 'highestStreak', 'lastActiveDate', 'mascotTier', 'xp', 'dailyStreak', 'displayName', 'photoURL', 'jlptLevel'])
         );
       allow delete: if false; // Users shouldn't delete profiles easily
     }

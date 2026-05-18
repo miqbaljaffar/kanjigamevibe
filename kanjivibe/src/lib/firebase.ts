@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer, doc as firestoreDoc } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -14,18 +15,6 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-
-// Connectivity Test
-async function testConnection() {
-  try {
-    await getDocFromServer(firestoreDoc(db, 'test', 'connection'));
-  } catch (error: any) {
-    if (error.message?.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration or network.");
-    }
-  }
-}
-testConnection();
 
 export enum OperationType {
   CREATE = 'create',

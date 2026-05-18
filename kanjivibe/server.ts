@@ -4,22 +4,32 @@ import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import morgan from "morgan";
+import compression from "compression";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Security headers (relaxed CSP for Vite dev server & inline styles)
+// Security headers (COOP disabled for Firebase signInWithPopup)
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
 }));
+
+// Gzip compression for all responses
+app.use(compression());
 
 // Request logging
 app.use(morgan("combined"));
 
 app.use(express.json({ limit: '10mb' }));
+
+// Health check endpoint (required by Cloud Run)
+app.get('/health', (_req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -153,10 +163,12 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
   try {
     const { messages, level = 'N5' } = req.body;
 
-    const chat = ai.chats.create({
-      model: "gemini-3-flash-preview",
-      config: {
-        systemInstruction: `You are Sacho (Manager) at a Japanese Engineering company. 
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      res.status(400).json({ error: "No messages provided" });
+      return;
+    }
+
+    const systemInstruction = `You are Sacho (Manager) at a Japanese Engineering company. 
         The student is applying for a job. 
         STRICT RULES:
         1. Use ONLY JLPT ${level} level vocabulary and grammar.
@@ -164,18 +176,38 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
         3. Be encouraging but professional.
         4. Focus on workplace topics: self-introduction, skills, office etiquette, schedules.
         5. Keep responses concise (under 2-3 sentences).
-        6. Ask context-aware questions about the latest real-world web development and tech trends happening in Japan right now. Use the googleSearch tool to fetch current information when appropriate.`,
-        tools: [{ googleSearch: {} }]
-      }
-    });
+        6. Ask context-aware questions about the latest real-world web development and tech trends happening in Japan right now.`;
 
     const lastMessage = messages[messages.length - 1].content;
-    const response = await chat.sendMessage({ message: lastMessage });
 
-    res.json({ content: response.text });
-  } catch (error) {
-    console.error("Chat error:", error);
-    res.status(500).json({ error: "Failed to process chat" });
+    // Try with googleSearch first, fallback without it
+    let responseText: string | undefined;
+    try {
+      const chat = ai.chats.create({
+        model: "gemini-3-flash-preview",
+        config: {
+          systemInstruction,
+          tools: [{ googleSearch: {} }]
+        }
+      });
+      const response = await chat.sendMessage({ message: lastMessage });
+      responseText = response.text;
+    } catch (toolError: any) {
+      console.warn("Chat with googleSearch failed, retrying without tools:", toolError?.message || toolError);
+      // Fallback: retry without googleSearch tool
+      const chat = ai.chats.create({
+        model: "gemini-3-flash-preview",
+        config: { systemInstruction }
+      });
+      const response = await chat.sendMessage({ message: lastMessage });
+      responseText = response.text;
+    }
+
+    res.json({ content: responseText });
+  } catch (error: any) {
+    console.error("Chat error:", error?.message || error);
+    console.error("Chat error stack:", error?.stack);
+    res.status(500).json({ error: "Failed to process chat", details: error?.message });
   }
 });
 
