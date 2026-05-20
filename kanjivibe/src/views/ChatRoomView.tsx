@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mic, MicOff, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, User as UserIcon, Volume2, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { JLPTLevel } from '../hooks/useGame';
 
@@ -48,12 +48,18 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
     window.speechSynthesis.speak(utterance);
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      recognitionRef.current?.stop();
-      setIsRecording(false);
-      return;
+  const toggleVoice = (text: string) => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    } else {
+      speakJapanese(text);
     }
+  };
+
+  const startRecording = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e && e.type === 'touchstart') e.preventDefault(); 
+    if (isRecording) return;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -63,12 +69,17 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'ja-JP';
-    recognition.continuous = false;
+    recognition.continuous = true; // Diubah jadi true agar merekam terus sampai tombol dilepas
     recognition.interimResults = false;
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      handleSendMessage(transcript);
+      const transcript = Array.from(event.results)
+        .map((result: any) => result[0].transcript)
+        .join('');
+      
+      if (transcript.trim()) {
+        handleSendMessage(transcript);
+      }
     };
 
     recognition.onerror = (event: any) => {
@@ -85,6 +96,14 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
     recognitionRef.current = recognition;
   };
 
+  const stopRecording = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e && (e.type === 'touchend' || e.type === 'touchcancel')) e.preventDefault();
+    
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+    }
+  };
+
   const handleSendMessage = async (text: string) => {
     const newMsgs = [...chatMessages, { role: 'user', content: text }];
     setChatMessages(newMsgs as any);
@@ -97,7 +116,9 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
       });
       const data = await res.json();
       setChatMessages([...newMsgs, { role: 'assistant', content: data.content }] as any);
-      speakJapanese(data.content);
+      
+      // Audio otomatis dimatikan, user harus klik Play manual
+      // speakJapanese(data.content); 
     } catch (e) {
       console.error(e);
     } finally {
@@ -131,16 +152,34 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         )}
         {chatMessages.map((m, i) => (
           <div key={i} className={cn(
-            "max-w-[90%] sm:max-w-[80%] p-3 sm:p-4 rounded-2xl",
-            m.role === 'user' ? "ml-auto bg-pink-500 text-white" : "mr-auto bg-white/10"
+            "max-w-[90%] sm:max-w-[80%] flex flex-col gap-1.5",
+            m.role === 'user' ? "ml-auto items-end" : "mr-auto items-start"
           )}>
-            {m.content}
+            <div className={cn(
+              "p-3 sm:p-4 rounded-2xl",
+              m.role === 'user' ? "bg-pink-500 text-white rounded-br-sm" : "bg-white/10 rounded-bl-sm"
+            )}>
+              {m.content}
+            </div>
+            
+            {/* Tombol Play/Stop HANYA muncul untuk balasan AI/Sacho */}
+            {m.role === 'assistant' && (
+              <button 
+                onClick={() => toggleVoice(m.content)}
+                className="flex items-center gap-1.5 text-[10px] sm:text-xs text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 transition-colors px-2 py-1 rounded-md cursor-pointer"
+              >
+                {isSpeaking ? <Square className="w-3 h-3 sm:w-4 sm:h-4" /> : <Volume2 className="w-3 h-3 sm:w-4 sm:h-4" />}
+                {isSpeaking ? "Stop Voice" : "Play Voice"}
+              </button>
+            )}
           </div>
         ))}
+        
         {isChatLoading && <div className="text-cyan-400 text-xs sm:text-sm animate-pulse px-2">Sacho is typing...</div>}
         
+        {/* Indikator Animasi saat Sacho berbicara */}
         {isSpeaking && (
-          <div className="flex justify-center items-end gap-1 h-12 mt-4 mr-auto w-full p-4 rounded-2xl bg-cyan-900/20 border border-cyan-500/30">
+          <div className="flex justify-center items-end gap-1 h-12 mt-4 mr-auto w-full max-w-[200px] p-4 rounded-2xl bg-cyan-900/20 border border-cyan-500/30">
             {[...Array(15)].map((_, i) => (
               <motion.div
                 key={i}
@@ -167,9 +206,14 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
       }} className="flex gap-2">
         <button 
           type="button"
-          onClick={toggleRecording}
+          onMouseDown={startRecording}
+          onMouseUp={stopRecording}
+          onMouseLeave={stopRecording}
+          onTouchStart={startRecording}
+          onTouchEnd={stopRecording}
+          onTouchCancel={stopRecording}
           className={cn(
-            "p-3 sm:p-4 rounded-xl flex items-center justify-center transition-all border border-transparent",
+            "p-3 sm:p-4 rounded-xl flex items-center justify-center transition-all border border-transparent select-none touch-none cursor-pointer",
             isRecording 
               ? "bg-pink-500/20 text-pink-500 border-pink-500 shadow-[0_0_15px_rgba(255,0,255,0.5)] animate-pulse" 
               : "glass-card hover:bg-white/10 text-gray-400 hover:text-white"
@@ -179,7 +223,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         </button>
         <input
           name="message"
-          placeholder={isRecording ? "Listening..." : "Type in Japanese..."}
+          placeholder={isRecording ? "Listening... (Release to send)" : "Type or hold Mic..."}
           disabled={isRecording}
           className="flex-grow p-3 sm:p-4 text-sm sm:text-base glass-card bg-white/5 border-white/10 focus:border-cyan-500 outline-none transition-colors disabled:opacity-50"
         />
