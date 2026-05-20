@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Jika nanti Anda membuat sitemap, hapus tanda pagar di bawah dan ganti domainnya
+# Sitemap: https://kanjivibe-app-1090346603455.asia-southeast2.run.app/sitemap.xml

@@ -11,7 +11,6 @@ interface GameUIViewProps {
   game: any;
   userStats: any;
   setMode: (mode: GameMode) => void;
-  // Tambahan Props
   difficulty?: Difficulty;
   setDifficulty?: (diff: Difficulty) => void;
 }
@@ -27,6 +26,8 @@ export function GameUIView({
 }: GameUIViewProps) {
   // State untuk menahan pilihan mode sementara sebelum memilih kesulitan
   const [pendingMode, setPendingMode] = useState<GameMode | null>(null);
+  // State untuk mengontrol visibilitas modal QRIS
+  const [showQris, setShowQris] = useState(false);
 
   return (
     <motion.div
@@ -34,6 +35,7 @@ export function GameUIView({
       animate={{ opacity: 1, scale: 1 }}
       className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col h-[calc(100vh-120px)] sm:h-[calc(100vh-100px)] justify-center"
     >
+      {/* HEADER BAGIAN ATAS */}
       <div className="flex justify-between items-center mb-6 sm:mb-12">
         <button onClick={() => setView('dashboard')} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer">
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Back
@@ -111,6 +113,7 @@ export function GameUIView({
         </div>
       )}
 
+      {/* STATE: LOADING */}
       {game.gameState === 'loading' && (
         <div className="text-center py-20">
           <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -118,6 +121,7 @@ export function GameUIView({
         </div>
       )}
 
+      {/* STATE: PLAYING (SEDANG MENGISI SOAL) */}
       {game.gameState === 'playing' && game.currentQuestion && (
         <div className="flex flex-col gap-4 sm:gap-8 h-full">
           {/* Timer Bar */}
@@ -130,14 +134,10 @@ export function GameUIView({
           </div>
 
           <div className="glass-card p-6 sm:p-12 text-center relative flex-grow flex flex-col justify-center min-h-[200px] overflow-hidden">
+            {/* HANYA MENAMPILKAN PERTANYAAN, READING (KUNJAW) DIHILANGKAN DARI SINI */}
             <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 relative z-10 break-words whitespace-normal w-full px-2">
               {game.currentQuestion.question}
             </h3>
-            {game.currentQuestion.reading && (
-              <p className="text-lg sm:text-2xl text-gray-400 relative z-10 break-words whitespace-normal w-full px-2">
-                {game.currentQuestion.reading}
-              </p>
-            )}
 
             {/* Boss Image or Mascot Mini */}
             {game.bossImage ? (
@@ -169,6 +169,7 @@ export function GameUIView({
             )}
           </div>
 
+          {/* OPSI JAWABAN */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 shrink-0 pb-4">
             {game.currentQuestion.options.map((opt: string, i: number) => (
               <button
@@ -184,6 +185,7 @@ export function GameUIView({
         </div>
       )}
 
+      {/* STATE: FEEDBACK (SETELAH MENJAWAB) */}
       {game.gameState === 'feedback' && (
         <div className="text-center py-10 sm:py-20 animate-in zoom-in duration-300 h-full flex flex-col justify-center px-4">
           <h2 className={cn("text-4xl sm:text-6xl font-arcade mb-4", game.lastFeedback?.correct ? "neon-text-cyan" : "text-red-500")}>
@@ -198,14 +200,65 @@ export function GameUIView({
               +{game.lastFeedback.points} PTS
             </motion.p>
           )}
-          <p className="mt-4 sm:mt-8 text-sm sm:text-xl text-gray-300 max-w-md mx-auto line-clamp-6 sm:line-clamp-4 break-words whitespace-normal">
-            {game.currentQuestion?.explanation}
-          </p>
+          
+          <div className="mt-4 sm:mt-8 max-w-md mx-auto">
+            {/* READING (KUNJAW) DIPINDAHKAN KE SINI */}
+            {game.currentQuestion?.reading && (
+              <p className="text-lg sm:text-xl text-cyan-400 mb-2 font-bold break-words whitespace-normal">
+                Cara baca: {game.currentQuestion.reading}
+              </p>
+            )}
+            {/* Tambahan margin-bottom (mb-8) agar jarak ke tombol memadai */}
+            <p className="text-sm sm:text-xl text-gray-300 line-clamp-6 sm:line-clamp-4 break-words whitespace-normal mb-8">
+              {game.currentQuestion?.explanation}
+            </p>
+
+            {/* TOMBOL NEXT BARU */}
+            <button
+              onClick={() => game.nextQuestion()}
+              className="w-full p-4 bg-cyan-500/20 border border-cyan-500 text-cyan-400 font-arcade text-sm sm:text-base rounded-lg hover:bg-cyan-500/40 transition-colors cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+            >
+              LANJUT (NEXT)
+            </button>
+          </div>
         </div>
       )}
 
+      {/* STATE: ENDED (GAME OVER) */}
       {game.gameState === 'ended' && (
-        <div className="glass-card p-6 sm:p-12 text-center h-full flex flex-col justify-center">
+        <div className="glass-card p-6 sm:p-12 text-center h-full flex flex-col justify-center relative overflow-hidden">
+          
+          {/* MODAL QRIS DONASI */}
+          {showQris && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-md flex flex-col items-center justify-center p-6 rounded-2xl border border-cyan-500/30"
+            >
+              <h3 className="text-xl sm:text-2xl font-arcade neon-text-cyan mb-2">DUKUNG KAMI!</h3>
+              <p className="text-sm text-gray-300 mb-6 font-mono text-center max-w-xs">
+                Scan QRIS di bawah ini untuk mendukung pengembangan game. Arigatou Gozaimasu! ✨
+              </p>
+              
+              <div className="bg-white p-3 rounded-xl mb-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                {/* PASTIKAN FILE GAMBAR INI ADA DI FOLDER PUBLIC */}
+                <img 
+                  src="/qris.jpeg" 
+                  alt="QRIS Donasi" 
+                  className="w-48 h-48 sm:w-56 sm:h-56 object-cover rounded-lg"
+                />
+              </div>
+
+              <button
+                onClick={() => setShowQris(false)}
+                className="px-8 py-3 bg-red-500/20 text-red-400 border border-red-500 font-arcade text-sm rounded-lg hover:bg-red-500/40 transition-colors cursor-pointer"
+              >
+                TUTUP
+              </button>
+            </motion.div>
+          )}
+
           <h2 className="text-2xl sm:text-4xl font-arcade neon-text-pink mb-6">GAME OVER</h2>
           <div className="flex justify-center gap-6 sm:gap-12 mb-8">
             <div>
@@ -217,18 +270,36 @@ export function GameUIView({
               <p className="text-2xl sm:text-4xl font-arcade text-pink-400">x{game.streak}</p>
             </div>
           </div>
-          <button
-            onClick={() => game.restart()}
-            className="w-full p-4 bg-pink-500 text-white font-arcade text-sm sm:text-base rounded-lg hover:bg-pink-600 transition-colors cursor-pointer"
-          >
-            PLAY AGAIN
-          </button>
-          <button
-            onClick={() => setView('dashboard')}
-            className="w-full p-4 border border-pink-500 text-pink-500 font-arcade text-sm sm:text-base mt-4 rounded-lg hover:bg-pink-500/10 cursor-pointer"
-          >
-            MAIN MENU
-          </button>
+          
+          <div className="flex flex-col gap-3 w-full">
+            <button
+              onClick={() => {
+                setShowQris(false);
+                game.restart();
+              }}
+              className="w-full p-4 bg-pink-500 text-white font-arcade text-sm sm:text-base rounded-lg hover:bg-pink-600 transition-colors cursor-pointer"
+            >
+              PLAY AGAIN
+            </button>
+
+            {/* TOMBOL DONASI BARU */}
+            <button
+              onClick={() => setShowQris(true)}
+              className="w-full p-4 bg-cyan-500/10 border border-cyan-500 text-cyan-400 font-arcade text-sm sm:text-base rounded-lg hover:bg-cyan-500/30 transition-all cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+            >
+              SUPPORT US (DONASI)
+            </button>
+
+            <button
+              onClick={() => {
+                setShowQris(false);
+                setView('dashboard');
+              }}
+              className="w-full p-4 border border-pink-500 text-pink-500 font-arcade text-sm sm:text-base rounded-lg hover:bg-pink-500/10 cursor-pointer"
+            >
+              MAIN MENU
+            </button>
+          </div>
         </div>
       )}
     </motion.div>

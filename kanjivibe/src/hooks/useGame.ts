@@ -32,7 +32,7 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 1. Added startMode parameter here
+  // Parameter startMode ditambahkan untuk menentukan mode di awal
   const fetchQuestions = useCallback(async (customQuestions?: Question[], customBossImage?: string | null, startMode?: GameMode) => {
     if (customQuestions) {
       setQuestions(customQuestions);
@@ -46,29 +46,30 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // 2. Use startMode if provided, otherwise fallback to the current mode state
+        // Gunakan startMode jika ada, jika tidak kembali ke state mode saat ini
         body: JSON.stringify({ mode: startMode || mode, count: 10, level })
       });
       const data = await res.json();
       setQuestions(data);
       setGameState('playing');
     } catch (error) {
-      console.error("Failed to load questions", error);
+      console.error("Gagal memuat pertanyaan", error);
       setGameState('idle');
     }
   }, [mode, level]);
 
-  // 3. Added startMode parameter here
+  // Fungsi untuk memulai game
   const startGame = (customQuestions?: Question[], customBossImage?: string | null, startMode?: GameMode) => {
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     setCurrentIndex(0);
     setScore(0);
     setStreak(0);
     if (!customBossImage) setBossImage(null);
-    // 4. Pass startMode down to fetchQuestions
+    // Teruskan startMode ke fetchQuestions
     fetchQuestions(customQuestions, customBossImage, startMode);
   };
 
+  // Fungsi saat user memilih jawaban
   const handleAnswer = (index: number | null) => {
     if (gameState !== 'playing') return;
 
@@ -85,38 +86,44 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
       setScore(s => s + points);
       setStreak(s => s + 1);
     } else {
-      setStreak(0); // Penalty
+      setStreak(0); // Penalti streak reset ke 0 jika salah
     }
 
     setLastFeedback({ correct: isCorrect, points });
-    setGameState('feedback');
+    setGameState('feedback'); // Ubah state ke feedback untuk menampilkan kunjaw
 
+    // Hentikan timer waktu menjawab
     if (timerRef.current) clearInterval(timerRef.current);
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
-
-    feedbackTimeoutRef.current = setTimeout(() => {
-      if (currentIndex < questions.length - 1) {
-        setCurrentIndex(c => c + 1);
-        setTimeLeft(TIMER_MAP[difficulty]);
-        setGameState('playing');
-      } else {
-        setGameState('ended');
-      }
-    }, 2000);
+    
+    // Timer otomatis (setTimeout) DIHAPUS dari sini agar user bisa membaca penjelasan
   };
 
+  // FUNGSI BARU: Untuk pindah ke soal berikutnya secara manual
+  const nextQuestion = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(c => c + 1);
+      setTimeLeft(TIMER_MAP[difficulty]);
+      setGameState('playing');
+    } else {
+      setGameState('ended');
+    }
+  };
+
+  // Cleanup untuk feedback timeout
   useEffect(() => {
     return () => {
       if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     };
   }, []);
 
+  // Timer countdown saat sedang bermain
   useEffect(() => {
     if (gameState === 'playing') {
       timerRef.current = setInterval(() => {
         setTimeLeft(t => {
           if (t <= 1) {
-            handleAnswer(null); // Timeout is wrong answer
+            handleAnswer(null); // Jika waktu habis, dianggap salah (null)
             return 0;
           }
           return t - 1;
@@ -128,7 +135,7 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     };
   }, [gameState, currentIndex]);
 
-  // Web Speech API for listening mode
+  // Web Speech API untuk mode listening (mendengarkan)
   useEffect(() => {
     if (mode === 'listening' && gameState === 'playing') {
       const currentQuestion = questions[currentIndex];
@@ -150,6 +157,7 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     bossImage,
     startGame,
     handleAnswer,
-    restart: () => startGame() // restart relies on the current state, which is fine!
+    nextQuestion, // Diekspor agar bisa digunakan di UI tombol "Lanjut"
+    restart: () => startGame()
   };
 }
