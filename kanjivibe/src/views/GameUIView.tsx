@@ -36,9 +36,15 @@ export function GameUIView({
     >
       {/* HEADER BAGIAN ATAS */}
       <div className="flex justify-between items-center mb-6 sm:mb-12 shrink-0">
-        <button onClick={() => setView('dashboard')} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer">
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Back
+        {/* BEST PRACTICE: Desain tombol Back diseragamkan dengan animasi geser */}
+        <button 
+          onClick={() => setView('dashboard')} 
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer group"
+        >
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+          <span>Back</span>
         </button>
+        
         <div className="flex flex-col items-end">
           <p className="text-[10px] font-arcade text-cyan-500 mb-1">LVL: {jlptLevel}</p>
           <div className="flex gap-4 sm:gap-6">
@@ -75,12 +81,16 @@ export function GameUIView({
       {/* LANGKAH 2: PILIH SPEED / DIFFICULTY */}
       {game.gameState === 'idle' && pendingMode && (
         <div className="glass-card p-6 sm:p-12 text-center relative animate-in fade-in zoom-in duration-200">
-          <button 
-            onClick={() => setPendingMode(null)} 
-            className="absolute top-4 left-4 sm:top-6 sm:left-6 text-gray-400 hover:text-white flex items-center gap-2 cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" /> <span className="text-xs sm:text-sm">Back</span>
-          </button>
+          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
+            {/* BEST PRACTICE: Desain tombol Back diseragamkan dengan header utama */}
+            <button 
+              onClick={() => setPendingMode(null)} 
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer group"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+              <span>Back</span>
+            </button>
+          </div>
           
           <h2 className="text-xl sm:text-3xl font-arcade mb-8 text-cyan-400 mt-6 sm:mt-0">SELECT SPEED</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -131,7 +141,7 @@ export function GameUIView({
 
           <div className="glass-card p-6 sm:p-12 text-center relative grow flex flex-col justify-center min-h-[30dvh] overflow-hidden">
             <div className="flex-1 overflow-y-auto max-h-[30dvh] sm:max-h-[40dvh] w-full flex items-center justify-center z-10 relative">
-              <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 wrap-break-word whitespace-normal w-full px-2">
+              <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 wrap-break-words whitespace-normal w-full px-2">
                 {game.currentQuestion.question}
               </h3>
             </div>
@@ -172,7 +182,7 @@ export function GameUIView({
                 onClick={() => game.handleAnswer(i)}
                 className="glass-card p-4 sm:p-6 text-base sm:text-xl hover:bg-pink-500/20 transition-all border-pink-500/20 hover:border-pink-500 text-left flex items-center justify-between group min-h-16 cursor-pointer"
               >
-                <span className="wrap-break-word whitespace-normal pr-4 flex-1 leading-tight">{opt}</span>
+                <span className="wrap-break-words whitespace-normal pr-4 flex-1 leading-tight">{opt}</span>
                 <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 opacity-0 group-hover:opacity-100 shrink-0" />
               </button>
             ))}
@@ -198,11 +208,11 @@ export function GameUIView({
           
           <div className="mt-4 sm:mt-8 max-w-md mx-auto w-full">
             {game.currentQuestion?.reading && (
-              <p className="text-lg sm:text-xl text-cyan-400 mb-2 font-bold wrap-break-word whitespace-normal">
+              <p className="text-lg sm:text-xl text-cyan-400 mb-2 font-bold wrap-break-words whitespace-normal">
                 Cara baca: {game.currentQuestion.reading}
               </p>
             )}
-            <p className="text-sm sm:text-xl text-gray-300 line-clamp-6 sm:line-clamp-4 wrap-break-word whitespace-normal mb-8">
+            <p className="text-sm sm:text-xl text-gray-300 line-clamp-6 sm:line-clamp-4 wrap-break-words whitespace-normal mb-8">
               {game.currentQuestion?.explanation}
             </p>
 
@@ -269,7 +279,7 @@ export function GameUIView({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            // Overlay latar belakang gelap menutupi seluruh layar
+            // Overlay latar belakang gelap menutupi seluruh layar secara penuh
             className="fixed inset-0 z-100 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4"
           >
             <motion.div 

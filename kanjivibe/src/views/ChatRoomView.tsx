@@ -163,13 +163,14 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
         // BEST PRACTICE: Menggunakan min-h dinamis dan flex-1 agar merespon keyboard virtual lebih natural
         className="max-w-4xl mx-auto p-4 sm:p-6 min-h-[80dvh] flex-1 flex flex-col justify-center relative"
       >
-        <div className="absolute top-4 left-4 sm:top-0 sm:left-0 z-10">
+        <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
+          {/* BEST PRACTICE: Desain tombol Back minimalis yang diseragamkan dengan GameUIView */}
           <button 
             onClick={() => setView('dashboard')} 
-            className="p-3 glass-card hover:bg-white/10 flex items-center gap-2 transition-colors group cursor-pointer"
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer group"
           >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="text-sm font-bold hidden sm:inline">DASHBOARD</span>
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+            <span>Back</span>
           </button>
         </div>
 
@@ -218,11 +219,15 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
       className="max-w-2xl mx-auto p-4 sm:p-6 min-h-[80dvh] flex-1 flex flex-col"
     >
       <header className="flex items-center gap-4 mb-4 sm:mb-6 shrink-0">
-        <button onClick={() => setHasSelectedMode(false)} className="p-2 glass-card hover:bg-white/10 shrink-0 group cursor-pointer">
+        {/* BEST PRACTICE: Tombol back di header chat juga diminimalkan gayanya agar senada */}
+        <button 
+          onClick={() => setHasSelectedMode(false)} 
+          className="p-2 text-gray-400 hover:text-white transition-colors shrink-0 group cursor-pointer"
+        >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         </button>
         <div className="grow">
-          <h2 className="text-lg sm:text-xl font-bold">SACHO'S OFFICE</h2>
+          <h2 className="text-lg sm:text-xl font-bold">{"SACHO'S OFFICE"}</h2>
           <p className="text-[10px] sm:text-xs text-cyan-400">JFT A2 Interview Practice</p>
         </div>
         
