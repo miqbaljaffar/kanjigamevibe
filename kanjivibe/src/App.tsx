@@ -119,7 +119,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    // PERBAIKAN 1: min-h-[100dvh] menggantikan min-h-screen
+    <div className="min-h-dvh relative">
       <Sakura />
 
       {/* Tambahkan event listener onPlay dan onPause di elemen audio
@@ -184,7 +185,8 @@ export default function App() {
       {/* --- SPOTIFY-LIKE MINI MUSIC PLAYER CARD (DRAGGABLE) --- */}
       {!showLanding && (
         <motion.div 
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 glass-card neon-border p-2 sm:p-3 flex items-center gap-3 rounded-2xl shadow-[0_0_15px_rgba(255,0,255,0.2)] cursor-grab active:cursor-grabbing backdrop-blur-md bg-black/40"
+          // PERBAIKAN 2: Mengubah bottom-4 menjadi bottom-20 khusus di mobile agar tidak menutupi tombol penting
+          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 glass-card neon-border p-2 sm:p-3 flex items-center gap-3 rounded-2xl shadow-[0_0_15px_rgba(255,0,255,0.2)] cursor-grab active:cursor-grabbing backdrop-blur-md bg-black/40"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           whileHover={{ scale: 1.02 }}
@@ -224,7 +226,7 @@ export default function App() {
 
           {/* Tombol Play/Pause */}
           <button 
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors ml-auto border border-white/10 group z-10"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors ml-auto border border-white/10 group z-10 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation(); // Mencegah trigger click ganda dengan container
               toggleMusic();

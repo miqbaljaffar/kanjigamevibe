@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-// Tambahkan import MessageSquare dan Flame untuk icon mode
 import { ArrowLeft, Mic, MicOff, User as UserIcon, Volume2, Square, MessageSquare, Flame } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { JLPTLevel } from '../hooks/useGame';
@@ -137,13 +136,14 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-4xl mx-auto p-4 sm:p-6 h-[85vh] sm:h-[80vh] flex flex-col justify-center relative"
+        // PERBAIKAN: Mengganti h-[85vh] menjadi h-[85dvh]
+        className="max-w-4xl mx-auto p-4 sm:p-6 h-[85dvh] sm:h-[80dvh] flex flex-col justify-center relative"
       >
         {/* Tombol Kembali ke Dashboard */}
         <div className="absolute top-4 left-4 sm:top-0 sm:left-0 z-10">
           <button 
             onClick={() => setView('dashboard')} 
-            className="p-3 glass-card hover:bg-white/10 flex items-center gap-2 transition-colors group"
+            className="p-3 glass-card hover:bg-white/10 flex items-center gap-2 transition-colors group cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span className="text-sm font-bold hidden sm:inline">DASHBOARD</span>
@@ -159,7 +159,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
           {/* Card Mentoring */}
           <button
             onClick={() => { setChatMode('mentoring'); setHasSelectedMode(true); }}
-            className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all group relative overflow-hidden"
+            className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all group relative overflow-hidden cursor-pointer"
           >
             <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="p-4 bg-cyan-500/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
@@ -172,7 +172,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
           {/* Card Appaku */}
           <button
             onClick={() => { setChatMode('appaku'); setHasSelectedMode(true); }}
-            className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-red-500/50 hover:bg-red-500/10 transition-all group relative overflow-hidden"
+            className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-red-500/50 hover:bg-red-500/10 transition-all group relative overflow-hidden cursor-pointer"
           >
             <div className="absolute inset-0 bg-linear-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="p-4 bg-red-500/20 rounded-full mb-4 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(255,0,0,0.3)]">
@@ -193,11 +193,12 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
     <motion.div
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
-      className="max-w-2xl mx-auto p-4 sm:p-6 h-[85vh] sm:h-[80vh] flex flex-col"
+      // PERBAIKAN: Mengganti h-[85vh] menjadi h-[85dvh]
+      className="max-w-2xl mx-auto p-4 sm:p-6 h-[85dvh] sm:h-[80dvh] flex flex-col"
     >
-      <header className="flex items-center gap-4 mb-4 sm:mb-6">
+      <header className="flex items-center gap-4 mb-4 sm:mb-6 shrink-0">
         {/* Tombol Back sekarang mengembalikan ke layar pilihan mode, bukan langsung ke dashboard */}
-        <button onClick={() => setHasSelectedMode(false)} className="p-2 glass-card hover:bg-white/10 shrink-0 group">
+        <button onClick={() => setHasSelectedMode(false)} className="p-2 glass-card hover:bg-white/10 shrink-0 group cursor-pointer">
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         </button>
         <div className="grow">
@@ -216,6 +217,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         </div>
       </header>
 
+      {/* Area Chat List */}
       <div className="grow glass-card p-4 sm:p-6 overflow-y-auto mb-4 flex flex-col gap-4 text-sm sm:text-base">
         {chatMessages.length === 0 && (
           <div className="text-center text-gray-500 mt-10 sm:mt-20">
@@ -257,6 +259,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         {isChatLoading && <div className="text-cyan-400 text-xs sm:text-sm animate-pulse px-2">Sacho is typing...</div>}
       </div>
 
+      {/* Form Input Area */}
       <form onSubmit={(e) => {
         e.preventDefault();
         const inputElement = (e.currentTarget.elements.namedItem('message') as HTMLInputElement);
@@ -265,7 +268,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
           handleSendMessage(input);
           e.currentTarget.reset();
         }
-      }} className="flex gap-2">
+      }} className="flex gap-2 shrink-0">
         <button 
           type="button"
           onMouseDown={startRecording}
@@ -292,7 +295,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         <button 
           type="submit"
           disabled={isRecording || isChatLoading}
-          className="px-4 sm:px-6 bg-cyan-500 text-black font-bold text-xs sm:text-sm rounded-xl hover:bg-cyan-400 transition-colors disabled:opacity-50"
+          className="px-4 sm:px-6 bg-cyan-500 text-black font-bold text-xs sm:text-sm rounded-xl hover:bg-cyan-400 transition-colors disabled:opacity-50 cursor-pointer"
         >
           SEND
         </button>

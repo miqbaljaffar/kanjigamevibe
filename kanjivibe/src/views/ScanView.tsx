@@ -102,7 +102,8 @@ export function ScanView({ setView, jlptLevel, game }: ScanViewProps) {
         <h2 className="text-lg sm:text-xl font-bold uppercase tracking-widest font-arcade text-yellow-500">Boss Scanner</h2>
       </header>
 
-      <div className="glass-card min-h-[60vh] sm:aspect-video relative flex flex-col items-center justify-center p-6 sm:p-8 overflow-hidden">
+      {/* PERBAIKAN: Mengganti min-h-[60vh] dengan min-h-[50dvh] sm:min-h-0 sm:aspect-video */}
+      <div className="glass-card min-h-[50dvh] sm:min-h-0 sm:aspect-video relative flex flex-col items-center justify-center p-6 sm:p-8 overflow-hidden">
         
         {/* LAYAR LOADING PEMINDAIAN CYBERPUNK DRAMATIS */}
         {isScanning && (

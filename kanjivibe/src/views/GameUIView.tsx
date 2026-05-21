@@ -33,7 +33,8 @@ export function GameUIView({
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col h-[calc(100vh-120px)] sm:h-[calc(100vh-100px)] justify-center"
+      // PERBAIKAN 1: Menggunakan dvh (dynamic viewport height) alih-alih vh
+      className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col h-[calc(100dvh-120px)] sm:h-[calc(100dvh-100px)] justify-center"
     >
       {/* HEADER BAGIAN ATAS */}
       <div className="flex justify-between items-center mb-6 sm:mb-12">
@@ -134,10 +135,12 @@ export function GameUIView({
           </div>
 
           <div className="glass-card p-6 sm:p-12 text-center relative grow flex flex-col justify-center min-h-50 overflow-hidden">
-            {/* HANYA MENAMPILKAN PERTANYAAN, READING (KUNJAW) DIHILANGKAN DARI SINI */}
-            <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 relative z-10 wrap-break-word whitespace-normal w-full px-2">
-              {game.currentQuestion.question}
-            </h3>
+            {/* PERBAIKAN 2: Teks dibungkus agar bisa discroll jika soalnya panjang */}
+            <div className="flex-1 overflow-y-auto max-h-[30dvh] sm:max-h-[40dvh] w-full flex items-center justify-center z-10 relative">
+              <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 wrap-break-word whitespace-normal w-full px-2">
+                {game.currentQuestion.question}
+              </h3>
+            </div>
 
             {/* Boss Image or Mascot Mini */}
             {game.bossImage ? (
@@ -202,18 +205,15 @@ export function GameUIView({
           )}
           
           <div className="mt-4 sm:mt-8 max-w-md mx-auto">
-            {/* READING (KUNJAW) DIPINDAHKAN KE SINI */}
             {game.currentQuestion?.reading && (
               <p className="text-lg sm:text-xl text-cyan-400 mb-2 font-bold wrap-break-word whitespace-normal">
                 Cara baca: {game.currentQuestion.reading}
               </p>
             )}
-            {/* Tambahan margin-bottom (mb-8) agar jarak ke tombol memadai */}
             <p className="text-sm sm:text-xl text-gray-300 line-clamp-6 sm:line-clamp-4 wrap-break-word whitespace-normal mb-8">
               {game.currentQuestion?.explanation}
             </p>
 
-            {/* TOMBOL NEXT BARU */}
             <button
               onClick={() => game.nextQuestion()}
               className="w-full p-4 bg-cyan-500/20 border border-cyan-500 text-cyan-400 font-arcade text-sm sm:text-base rounded-lg hover:bg-cyan-500/40 transition-colors cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.3)]"
@@ -234,15 +234,15 @@ export function GameUIView({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-md flex flex-col items-center justify-center p-6 rounded-2xl border border-cyan-500/30"
+              // PERBAIKAN 3: overflow-y-auto & justify-start sm:justify-center agar modal QRIS scrollable
+              className="absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-md flex flex-col items-center justify-start sm:justify-center overflow-y-auto p-6 rounded-2xl border border-cyan-500/30"
             >
-              <h3 className="text-xl sm:text-2xl font-arcade neon-text-cyan mb-2">DUKUNG KAMI!</h3>
+              <h3 className="text-xl sm:text-2xl font-arcade neon-text-cyan mb-2 mt-8 sm:mt-0">DUKUNG KAMI!</h3>
               <p className="text-sm text-gray-300 mb-6 font-mono text-center max-w-xs">
                 Scan QRIS di bawah ini untuk mendukung pengembangan game. Arigatou Gozaimasu! ✨
               </p>
               
               <div className="bg-white p-3 rounded-xl mb-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-                {/* PASTIKAN FILE GAMBAR INI ADA DI FOLDER PUBLIC */}
                 <img 
                   src="/qris.jpeg" 
                   alt="QRIS Donasi" 
@@ -252,7 +252,7 @@ export function GameUIView({
 
               <button
                 onClick={() => setShowQris(false)}
-                className="px-8 py-3 bg-red-500/20 text-red-400 border border-red-500 font-arcade text-sm rounded-lg hover:bg-red-500/40 transition-colors cursor-pointer"
+                className="px-8 py-3 bg-red-500/20 text-red-400 border border-red-500 font-arcade text-sm rounded-lg hover:bg-red-500/40 transition-colors cursor-pointer mb-8 sm:mb-0"
               >
                 TUTUP
               </button>
@@ -282,7 +282,6 @@ export function GameUIView({
               PLAY AGAIN
             </button>
 
-            {/* TOMBOL DONASI BARU */}
             <button
               onClick={() => setShowQris(true)}
               className="w-full p-4 bg-cyan-500/10 border border-cyan-500 text-cyan-400 font-arcade text-sm sm:text-base rounded-lg hover:bg-cyan-500/30 transition-all cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.2)]"
