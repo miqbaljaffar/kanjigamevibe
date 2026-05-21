@@ -5,18 +5,20 @@ import { cn } from '../lib/utils';
 import { JLPTLevel } from '../hooks/useGame';
 
 interface ChatRoomViewProps {
-  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' ) => void;
+  // Tambahkan 'error' ke dalam tipe view
+  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' | 'error' ) => void;
   jlptLevel: JLPTLevel;
+  // Fungsi penangkap error yang dilempar dari App.tsx
+  onError?: (msg: string, type: 'offline' | 'api_limit' | 'unknown') => void;
 }
 
-export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
+export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps) {
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   
   const [chatMode, setChatMode] = useState<'mentoring' | 'appaku'>('mentoring');
-  // STATE BARU: Untuk mengecek apakah user sudah memilih mode
   const [hasSelectedMode, setHasSelectedMode] = useState(false);
   
   const recognitionRef = useRef<any>(null);
@@ -118,11 +120,29 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: newMsgs, level: jlptLevel, mode: chatMode })
       });
+      
+      // Deteksi Error HTTP Status
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error("API_LIMIT");
+        } else {
+          throw new Error(`Server merespon dengan status ${res.status}`);
+        }
+      }
+
       const data = await res.json();
       setChatMessages([...newMsgs, { role: 'assistant', content: data.content }] as any);
       
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      // Lempar error ke Global Error View di App.tsx
+      if (e.message === "API_LIMIT") {
+        if (onError) onError("Quota AI Gemini telah habis atau rate limit tercapai. Harap tunggu beberapa saat.", 'api_limit');
+      } else if (!navigator.onLine || e.message.includes('Failed to fetch')) {
+        if (onError) onError("Gagal menghubungi server. Pastikan koneksi internet stabil.", 'offline');
+      } else {
+        if (onError) onError(`Terjadi kesalahan sistem: ${e.message}`, 'unknown');
+      }
     } finally {
       setIsChatLoading(false);
     }
@@ -136,10 +156,8 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        // PERBAIKAN: Mengganti h-[85vh] menjadi h-[85dvh]
         className="max-w-4xl mx-auto p-4 sm:p-6 h-[85dvh] sm:h-[80dvh] flex flex-col justify-center relative"
       >
-        {/* Tombol Kembali ke Dashboard */}
         <div className="absolute top-4 left-4 sm:top-0 sm:left-0 z-10">
           <button 
             onClick={() => setView('dashboard')} 
@@ -156,7 +174,6 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl mx-auto">
-          {/* Card Mentoring */}
           <button
             onClick={() => { setChatMode('mentoring'); setHasSelectedMode(true); }}
             className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all group relative overflow-hidden cursor-pointer"
@@ -169,7 +186,6 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
             <p className="text-sm text-gray-400">Sacho yang ramah dan suportif. Sangat cocok untuk latihan santai dan membangun kepercayaan diri.</p>
           </button>
 
-          {/* Card Appaku */}
           <button
             onClick={() => { setChatMode('appaku'); setHasSelectedMode(true); }}
             className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-red-500/50 hover:bg-red-500/10 transition-all group relative overflow-hidden cursor-pointer"
@@ -193,11 +209,9 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
     <motion.div
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
-      // PERBAIKAN: Mengganti h-[85vh] menjadi h-[85dvh]
       className="max-w-2xl mx-auto p-4 sm:p-6 h-[85dvh] sm:h-[80dvh] flex flex-col"
     >
       <header className="flex items-center gap-4 mb-4 sm:mb-6 shrink-0">
-        {/* Tombol Back sekarang mengembalikan ke layar pilihan mode, bukan langsung ke dashboard */}
         <button onClick={() => setHasSelectedMode(false)} className="p-2 glass-card hover:bg-white/10 shrink-0 group cursor-pointer">
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         </button>
@@ -206,7 +220,6 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
           <p className="text-[10px] sm:text-xs text-cyan-400">JFT A2 Interview Practice</p>
         </div>
         
-        {/* Indikator Mode (Menggantikan Dropdown lama) */}
         <div className={cn(
           "px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-bold",
           chatMode === 'mentoring' 
@@ -217,7 +230,6 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         </div>
       </header>
 
-      {/* Area Chat List */}
       <div className="grow glass-card p-4 sm:p-6 overflow-y-auto mb-4 flex flex-col gap-4 text-sm sm:text-base">
         {chatMessages.length === 0 && (
           <div className="text-center text-gray-500 mt-10 sm:mt-20">
@@ -259,7 +271,6 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         {isChatLoading && <div className="text-cyan-400 text-xs sm:text-sm animate-pulse px-2">Sacho is typing...</div>}
       </div>
 
-      {/* Form Input Area */}
       <form onSubmit={(e) => {
         e.preventDefault();
         const inputElement = (e.currentTarget.elements.namedItem('message') as HTMLInputElement);
