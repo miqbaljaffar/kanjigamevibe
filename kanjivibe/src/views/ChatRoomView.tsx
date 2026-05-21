@@ -5,10 +5,8 @@ import { cn } from '../lib/utils';
 import { JLPTLevel } from '../hooks/useGame';
 
 interface ChatRoomViewProps {
-  // Tambahkan 'error' ke dalam tipe view
   setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' | 'error' ) => void;
   jlptLevel: JLPTLevel;
-  // Fungsi penangkap error yang dilempar dari App.tsx
   onError?: (msg: string, type: 'offline' | 'api_limit' | 'unknown') => void;
 }
 
@@ -22,6 +20,14 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
   const [hasSelectedMode, setHasSelectedMode] = useState(false);
   
   const recognitionRef = useRef<any>(null);
+  
+  // BEST PRACTICE: Ref untuk menargetkan elemen paling bawah dari chat untuk auto-scroll
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // BEST PRACTICE: Effect untuk trigger scroll saat pesan bertambah atau sedang loading
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isChatLoading]);
 
   useEffect(() => {
     if (window.speechSynthesis) {
@@ -121,7 +127,6 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
         body: JSON.stringify({ messages: newMsgs, level: jlptLevel, mode: chatMode })
       });
       
-      // Deteksi Error HTTP Status
       if (!res.ok) {
         if (res.status === 429) {
           throw new Error("API_LIMIT");
@@ -135,7 +140,6 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
       
     } catch (e: any) {
       console.error(e);
-      // Lempar error ke Global Error View di App.tsx
       if (e.message === "API_LIMIT") {
         if (onError) onError("Quota AI Gemini telah habis atau rate limit tercapai. Harap tunggu beberapa saat.", 'api_limit');
       } else if (!navigator.onLine || e.message.includes('Failed to fetch')) {
@@ -156,7 +160,8 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-4xl mx-auto p-4 sm:p-6 h-[85dvh] sm:h-[80dvh] flex flex-col justify-center relative"
+        // BEST PRACTICE: Menggunakan min-h dinamis dan flex-1 agar merespon keyboard virtual lebih natural
+        className="max-w-4xl mx-auto p-4 sm:p-6 min-h-[80dvh] flex-1 flex flex-col justify-center relative"
       >
         <div className="absolute top-4 left-4 sm:top-0 sm:left-0 z-10">
           <button 
@@ -209,7 +214,8 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
     <motion.div
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
-      className="max-w-2xl mx-auto p-4 sm:p-6 h-[85dvh] sm:h-[80dvh] flex flex-col"
+      // BEST PRACTICE: Flex flex-col dan min-h memastikan layout tidak hancur saat keyboard mobile terbuka
+      className="max-w-2xl mx-auto p-4 sm:p-6 min-h-[80dvh] flex-1 flex flex-col"
     >
       <header className="flex items-center gap-4 mb-4 sm:mb-6 shrink-0">
         <button onClick={() => setHasSelectedMode(false)} className="p-2 glass-card hover:bg-white/10 shrink-0 group cursor-pointer">
@@ -230,6 +236,7 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
         </div>
       </header>
 
+      {/* Bagian overflow-y-auto yang berisi chat. Flex "grow" akan mengambil sisa ruang. */}
       <div className="grow glass-card p-4 sm:p-6 overflow-y-auto mb-4 flex flex-col gap-4 text-sm sm:text-base">
         {chatMessages.length === 0 && (
           <div className="text-center text-gray-500 mt-10 sm:mt-20">
@@ -269,6 +276,9 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
         ))}
         
         {isChatLoading && <div className="text-cyan-400 text-xs sm:text-sm animate-pulse px-2">Sacho is typing...</div>}
+        
+        {/* BEST PRACTICE: Titik jangkar (anchor point) untuk auto-scroll diletakkan di akhir *container* pesan */}
+        <div ref={messagesEndRef} />
       </div>
 
       <form onSubmit={(e) => {

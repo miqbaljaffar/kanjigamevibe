@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { Mascot } from '../components/Mascot';
 import { cn } from '../lib/utils';
@@ -24,20 +24,18 @@ export function GameUIView({
   difficulty,
   setDifficulty
 }: GameUIViewProps) {
-  // State untuk menahan pilihan mode sementara sebelum memilih kesulitan
   const [pendingMode, setPendingMode] = useState<GameMode | null>(null);
-  // State untuk mengontrol visibilitas modal QRIS
   const [showQris, setShowQris] = useState(false);
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      // PERBAIKAN 1: Menggunakan dvh (dynamic viewport height) alih-alih vh
-      className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col h-[calc(100dvh-120px)] sm:h-[calc(100dvh-100px)] justify-center"
+      // BEST PRACTICE: Gunakan min-h dinamis dan flexbox alih-alih calc() hardcode
+      className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col min-h-[75dvh] justify-center relative"
     >
       {/* HEADER BAGIAN ATAS */}
-      <div className="flex justify-between items-center mb-6 sm:mb-12">
+      <div className="flex justify-between items-center mb-6 sm:mb-12 shrink-0">
         <button onClick={() => setView('dashboard')} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer">
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Back
         </button>
@@ -64,7 +62,7 @@ export function GameUIView({
             {(['kanji-meaning', 'meaning-kanji', 'hiragana-meaning', 'bunpou', 'listening'] as GameMode[]).map(m => (
               <button
                 key={m}
-                onClick={() => setPendingMode(m)} // Tahan mode, jangan langsung mulai
+                onClick={() => setPendingMode(m)}
                 className="p-3 sm:p-4 border border-pink-500/30 rounded-lg hover:bg-pink-500/20 transition-all capitalize text-sm sm:text-base cursor-pointer"
               >
                 {m.replace('-', ' ')}
@@ -92,11 +90,9 @@ export function GameUIView({
                 onClick={() => {
                   if (setDifficulty) setDifficulty(d);
                   setMode(pendingMode);
-                  
-                  // Mulai game setelah state di-set dengan delay kecil agar React merender state baru
                   setTimeout(() => {
                     game.startGame(undefined, undefined, pendingMode);
-                    setPendingMode(null); // Reset pending mode untuk sesi berikutnya
+                    setPendingMode(null); 
                   }, 50);
                 }}
                 className={cn(
@@ -116,16 +112,15 @@ export function GameUIView({
 
       {/* STATE: LOADING */}
       {game.gameState === 'loading' && (
-        <div className="text-center py-20">
+        <div className="text-center py-20 grow flex flex-col justify-center">
           <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="font-arcade text-pink-400">GENERATING QUIZ...</p>
         </div>
       )}
 
-      {/* STATE: PLAYING (SEDANG MENGISI SOAL) */}
+      {/* STATE: PLAYING */}
       {game.gameState === 'playing' && game.currentQuestion && (
-        <div className="flex flex-col gap-4 sm:gap-8 h-full">
-          {/* Timer Bar */}
+        <div className="flex flex-col gap-4 sm:gap-8 grow">
           <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden shrink-0">
             <motion.div
               initial={{ width: '100%' }}
@@ -134,15 +129,13 @@ export function GameUIView({
             />
           </div>
 
-          <div className="glass-card p-6 sm:p-12 text-center relative grow flex flex-col justify-center min-h-50 overflow-hidden">
-            {/* PERBAIKAN 2: Teks dibungkus agar bisa discroll jika soalnya panjang */}
+          <div className="glass-card p-6 sm:p-12 text-center relative grow flex flex-col justify-center min-h-[30dvh] overflow-hidden">
             <div className="flex-1 overflow-y-auto max-h-[30dvh] sm:max-h-[40dvh] w-full flex items-center justify-center z-10 relative">
               <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 wrap-break-word whitespace-normal w-full px-2">
                 {game.currentQuestion.question}
               </h3>
             </div>
 
-            {/* Boss Image or Mascot Mini */}
             {game.bossImage ? (
               <motion.div 
                 className="absolute inset-0 flex items-center justify-center z-0 opacity-50 pointer-events-none overflow-hidden rounded-2xl"
@@ -172,13 +165,12 @@ export function GameUIView({
             )}
           </div>
 
-          {/* OPSI JAWABAN */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 shrink-0 pb-4">
             {game.currentQuestion.options.map((opt: string, i: number) => (
               <button
                 key={i}
                 onClick={() => game.handleAnswer(i)}
-                className="glass-card p-4 sm:p-6 text-base sm:text-xl hover:bg-pink-500/20 transition-all border-pink-500/20 hover:border-pink-500 text-left flex items-center justify-between group h-full min-h-16 cursor-pointer"
+                className="glass-card p-4 sm:p-6 text-base sm:text-xl hover:bg-pink-500/20 transition-all border-pink-500/20 hover:border-pink-500 text-left flex items-center justify-between group min-h-16 cursor-pointer"
               >
                 <span className="wrap-break-word whitespace-normal pr-4 flex-1 leading-tight">{opt}</span>
                 <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 opacity-0 group-hover:opacity-100 shrink-0" />
@@ -188,7 +180,7 @@ export function GameUIView({
         </div>
       )}
 
-      {/* STATE: FEEDBACK (SETELAH MENJAWAB) */}
+      {/* STATE: FEEDBACK */}
       {game.gameState === 'feedback' && (
         <div className="text-center py-10 sm:py-20 animate-in zoom-in duration-300 h-full flex flex-col justify-center px-4">
           <h2 className={cn("text-4xl sm:text-6xl font-arcade mb-4", game.lastFeedback?.correct ? "neon-text-cyan" : "text-red-500")}>
@@ -204,7 +196,7 @@ export function GameUIView({
             </motion.p>
           )}
           
-          <div className="mt-4 sm:mt-8 max-w-md mx-auto">
+          <div className="mt-4 sm:mt-8 max-w-md mx-auto w-full">
             {game.currentQuestion?.reading && (
               <p className="text-lg sm:text-xl text-cyan-400 mb-2 font-bold wrap-break-word whitespace-normal">
                 Cara baca: {game.currentQuestion.reading}
@@ -226,39 +218,7 @@ export function GameUIView({
 
       {/* STATE: ENDED (GAME OVER) */}
       {game.gameState === 'ended' && (
-        <div className="glass-card p-6 sm:p-12 text-center h-full flex flex-col justify-center relative overflow-hidden">
-          
-          {/* MODAL QRIS DONASI */}
-          {showQris && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              // PERBAIKAN 3: overflow-y-auto & justify-start sm:justify-center agar modal QRIS scrollable
-              className="absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-md flex flex-col items-center justify-start sm:justify-center overflow-y-auto p-6 rounded-2xl border border-cyan-500/30"
-            >
-              <h3 className="text-xl sm:text-2xl font-arcade neon-text-cyan mb-2 mt-8 sm:mt-0">DUKUNG KAMI!</h3>
-              <p className="text-sm text-gray-300 mb-6 font-mono text-center max-w-xs">
-                Scan QRIS di bawah ini untuk mendukung pengembangan game. Arigatou Gozaimasu! ✨
-              </p>
-              
-              <div className="bg-white p-3 rounded-xl mb-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-                <img 
-                  src="/qris.jpeg" 
-                  alt="QRIS Donasi" 
-                  className="w-48 h-48 sm:w-56 sm:h-56 object-cover rounded-lg"
-                />
-              </div>
-
-              <button
-                onClick={() => setShowQris(false)}
-                className="px-8 py-3 bg-red-500/20 text-red-400 border border-red-500 font-arcade text-sm rounded-lg hover:bg-red-500/40 transition-colors cursor-pointer mb-8 sm:mb-0"
-              >
-                TUTUP
-              </button>
-            </motion.div>
-          )}
-
+        <div className="glass-card p-6 sm:p-12 text-center grow flex flex-col justify-center relative overflow-hidden">
           <h2 className="text-2xl sm:text-4xl font-arcade neon-text-pink mb-6">GAME OVER</h2>
           <div className="flex justify-center gap-6 sm:gap-12 mb-8">
             <div>
@@ -301,6 +261,47 @@ export function GameUIView({
           </div>
         </div>
       )}
+
+      {/* MODAL QRIS DONASI - BEST PRACTICE */}
+      <AnimatePresence>
+        {showQris && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            // Overlay latar belakang gelap menutupi seluruh layar
+            className="fixed inset-0 z-100 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              // Konten dibungkus dalam card di tengah
+              className="bg-gray-900/95 border border-cyan-500/30 rounded-2xl p-6 sm:p-8 flex flex-col items-center max-w-sm w-full shadow-[0_0_40px_rgba(6,182,212,0.15)] max-h-[90dvh] overflow-y-auto"
+            >
+              <h3 className="text-xl sm:text-2xl font-arcade neon-text-cyan mb-2 text-center">DUKUNG KAMI!</h3>
+              <p className="text-sm text-gray-300 mb-6 font-mono text-center">
+                Scan QRIS di bawah ini untuk mendukung pengembangan game. Arigatou Gozaimasu! ✨
+              </p>
+              
+              <div className="bg-white p-3 rounded-xl mb-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                <img 
+                  src="/qris.jpeg" 
+                  alt="QRIS Donasi" 
+                  className="w-48 h-48 sm:w-56 sm:h-56 object-cover rounded-lg"
+                />
+              </div>
+
+              <button
+                onClick={() => setShowQris(false)}
+                className="w-full py-3 bg-red-500/20 text-red-400 border border-red-500 font-arcade text-sm rounded-lg hover:bg-red-500/40 transition-colors cursor-pointer"
+              >
+                TUTUP
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

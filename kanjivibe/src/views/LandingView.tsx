@@ -57,9 +57,10 @@ const JLPT_LEVELS = [
 
 export function LandingView({ onStart }: LandingViewProps) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       {/* ===== HERO SECTION ===== */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
+      {/* BEST PRACTICE: Menggunakan min-h-[100dvh] agar URL Bar HP tidak memotong layout */}
+      <section className="relative min-h-dvh flex flex-col items-center justify-center px-4 overflow-hidden">
         {/* Animated grid background */}
         <div className="absolute inset-0 opacity-20"
           style={{
@@ -68,8 +69,8 @@ export function LandingView({ onStart }: LandingViewProps) {
           }}
         />
 
-        {/* Radial glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-linear-to-r from-pink-500/10 via-purple-500/10 to-cyan-500/10 blur-[100px]" />
+        {/* BEST PRACTICE: Radial glow menggunakan nilai yang pasti (arbitrary values) dan responsif */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-75 h-75 sm:w-150 sm:h-150 rounded-full bg-linear-to-r from-pink-500/10 via-purple-500/10 to-cyan-500/10 blur-[80px] sm:blur-[100px]" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -202,7 +203,8 @@ export function LandingView({ onStart }: LandingViewProps) {
 
           {/* Stats */}
           <AnimatedSection delay={0.4}>
-            <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-12 sm:mt-16 max-w-2xl mx-auto">
+            {/* BEST PRACTICE: Ubah grid-cols-3 menjadi grid-cols-1 sm:grid-cols-3 agar tidak hancur di HP kecil */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 mt-12 sm:mt-16 max-w-2xl mx-auto">
               {[
                 { value: '5', label: 'Level JLPT', sub: 'N5 → N1' },
                 { value: '6+', label: 'Mode Quiz', sub: 'Kanji, Grammar, dll' },

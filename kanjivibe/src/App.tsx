@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sakura } from './components/Sakura';
 import { useGame, GameMode, Difficulty, JLPTLevel } from './hooks/useGame';
-// Import Icon untuk Music Player
 import { Play, Pause, Disc3 } from 'lucide-react';
 
 // Import views
@@ -11,7 +10,7 @@ import { DashboardView } from './views/DashboardView';
 import { GameUIView } from './views/GameUIView';
 import { ChatRoomView } from './views/ChatRoomView';
 import { ScanView } from './views/ScanView';
-import { ErrorView } from './views/ErrorView'; // <-- IMPORT ERROR VIEW BARU
+import { ErrorView } from './views/ErrorView';
 
 export default function App() {
   const [userStats, setUserStats] = useState<any>(() => {
@@ -28,9 +27,7 @@ export default function App() {
   
   const [showLanding, setShowLanding] = useState(true);
   
-  // PERBAIKAN 1: Tambahkan 'error' ke dalam state view
   const [view, setView] = useState<'dashboard' | 'game' | 'chat' | 'scan' | 'error'>('dashboard');
-  // STATE BARU: Menyimpan detail error
   const [errorDetails, setErrorDetails] = useState({ type: 'unknown' as 'offline' | 'api_limit' | 'unknown', message: '' });
   
   const [jlptLevel, setJlptLevel] = useState<JLPTLevel>(() => {
@@ -63,7 +60,7 @@ export default function App() {
 
   useEffect(() => {
     if (audioRef.current) {
-      if (view === 'chat' || view === 'error') { // Pause musik juga saat terjadi error sistem
+      if (view === 'chat' || view === 'error') { 
         audioRef.current.pause();
       } else if (!isUserPaused.current) {
         audioRef.current.play().catch(e => console.log("Auto-play prevented by browser:", e));
@@ -116,12 +113,10 @@ export default function App() {
       triggerGlobalError('offline', 'Koneksi internet terputus. Pastikan perangkatmu terhubung ke jaringan agar sistem AI dapat berjalan.');
     };
     
-    // Cek koneksi awal
     if (!navigator.onLine) {
       handleOffline();
     }
 
-    // Auto-recover jika internet menyala kembali
     const handleOnline = () => {
       if (view === 'error' && errorDetails.type === 'offline') {
         setView('dashboard');
@@ -151,7 +146,6 @@ export default function App() {
   }
 
   return (
-    // Mempertahankan min-h-[100dvh] untuk responsivitas mobile keyboard & URL Bar
     <div className="min-h-dvh relative">
       <Sakura />
 
@@ -174,7 +168,7 @@ export default function App() {
               {view === 'dashboard' && (
                 <DashboardView
                   userStats={userStats}
-                  setView={setView as any} // Ignore type check for simpler prop drilling if needed
+                  setView={setView as any} 
                   showLevelSelect={showLevelSelect}
                   setShowLevelSelect={setShowLevelSelect}
                   jlptLevel={jlptLevel}
@@ -194,7 +188,6 @@ export default function App() {
                 />
               )}
               
-              {/* Melempar properti onError ke ChatRoomView dan ScanView */}
               {view === 'chat' && (
                 <ChatRoomView
                   setView={setView as any}
@@ -211,13 +204,11 @@ export default function App() {
                 />
               )}
 
-              {/* TAMPILAN ERROR VIEW */}
               {view === 'error' && (
                 <ErrorView 
                   errorMessage={errorDetails.message}
                   errorType={errorDetails.type}
                   onReboot={() => {
-                    // Validasi: Cegah reboot jika memang masih offline
                     if (!navigator.onLine) {
                       alert("SYSTEM ALERT: Koneksi internet masih terputus!");
                       return;
@@ -232,14 +223,16 @@ export default function App() {
       </main>
 
       {/* --- SPOTIFY-LIKE MINI MUSIC PLAYER CARD --- */}
-      {/* Posisi disesuaikan agar tidak tumpang tindih dengan elemen penting (bottom-20 di HP, bottom-6 di PC) */}
       {!showLanding && view !== 'error' && (
         <motion.div 
           className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 glass-card neon-border p-2 sm:p-3 flex items-center gap-3 rounded-2xl shadow-[0_0_15px_rgba(255,0,255,0.2)] cursor-grab active:cursor-grabbing backdrop-blur-md bg-black/40"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           whileHover={{ scale: 1.02 }}
+          // BEST PRACTICE: Memberikan constraint agar tidak hilang ke luar layar saat didrag
           drag
+          dragConstraints={{ left: -20, right: 20, top: -20, bottom: 20 }}
+          dragElastic={0.2}
           dragMomentum={false} 
           whileDrag={{ scale: 1.05, opacity: 0.9 }} 
           onClick={toggleMusic}
