@@ -5,7 +5,7 @@ import { cn } from '../lib/utils';
 import { JLPTLevel } from '../hooks/useGame';
 
 interface ScanViewProps {
-  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' | 'leaderboard') => void;
+  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' ) => void;
   jlptLevel: JLPTLevel;
   game: any;
 }
@@ -136,7 +136,7 @@ export function ScanView({ setView, jlptLevel, game }: ScanViewProps) {
                 duration: 2.2,
                 ease: "easeInOut"
               }}
-              className="absolute left-0 right-0 h-[4px] bg-yellow-500 shadow-[0_0_15px_#eab308,0_0_30px_#eab308] z-22"
+              className="absolute left-0 right-0 h-1 bg-yellow-500 shadow-[0_0_15px_#eab308,0_0_30px_#eab308] z-22"
             />
 
             {/* Data HUD / Telemetri Cyberpunk di Sudut Layar */}

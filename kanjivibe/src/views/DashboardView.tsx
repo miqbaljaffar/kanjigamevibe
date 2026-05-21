@@ -101,7 +101,7 @@ export function DashboardView({
           >
             {/* Mascot Zone */}
             <div className="glass-card p-8 flex flex-col items-center justify-center relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-cyan-500" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-pink-500 to-cyan-500" />
               <div className="absolute top-4 left-4">
                 <button
                   onClick={() => setShowLevelSelect(true)}

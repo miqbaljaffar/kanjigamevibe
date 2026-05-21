@@ -69,7 +69,7 @@ export function LandingView({ onStart }: LandingViewProps) {
         />
 
         {/* Radial glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-cyan-500/10 blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-linear-to-r from-pink-500/10 via-purple-500/10 to-cyan-500/10 blur-[100px]" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -139,7 +139,7 @@ export function LandingView({ onStart }: LandingViewProps) {
             whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(255,0,255,0.5), 0 0 80px rgba(255,0,255,0.2)' }}
             whileTap={{ scale: 0.95 }}
             onClick={onStart}
-            className="relative px-10 sm:px-14 py-4 sm:py-5 bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white font-arcade text-sm sm:text-base rounded-2xl shadow-[0_0_30px_rgba(255,0,255,0.4)] transition-all duration-300 cursor-pointer"
+            className="relative px-10 sm:px-14 py-4 sm:py-5 bg-linear-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white font-arcade text-sm sm:text-base rounded-2xl shadow-[0_0_30px_rgba(255,0,255,0.4)] transition-all duration-300 cursor-pointer"
           >
             <span className="relative z-10 flex items-center gap-3">
               <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -242,7 +242,7 @@ export function LandingView({ onStart }: LandingViewProps) {
                   whileHover={{ y: -4, transition: { duration: 0.2 } }}
                   className={`glass-card p-6 sm:p-8 h-full ${feature.glow} hover:border-white/20 transition-all duration-300`}
                 >
-                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 sm:mb-5`}>
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-linear-to-br ${feature.color} flex items-center justify-center mb-4 sm:mb-5`}>
                     <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{feature.title}</h3>
@@ -277,11 +277,11 @@ export function LandingView({ onStart }: LandingViewProps) {
                   whileHover={{ x: 8, transition: { duration: 0.2 } }}
                   className="glass-card p-4 sm:p-5 flex items-center gap-4 sm:gap-6 hover:border-white/20 transition-all duration-300 cursor-default"
                 >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br from-purple-600/30 to-pink-600/30 border border-purple-500/20 flex flex-col items-center justify-center shrink-0">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-linear-to-br from-purple-600/30 to-pink-600/30 border border-purple-500/20 flex flex-col items-center justify-center shrink-0">
                     <span className="text-lg sm:text-xl font-arcade neon-text-pink leading-none">{item.level}</span>
                     <span className="text-[8px] sm:text-[10px] text-gray-500 mt-0.5">{item.kanji}</span>
                   </div>
-                  <div className="flex-grow min-w-0">
+                  <div className="grow min-w-0">
                     <h3 className="text-sm sm:text-base font-bold text-white">{item.label}</h3>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">{item.desc}</p>
                   </div>
@@ -291,7 +291,7 @@ export function LandingView({ onStart }: LandingViewProps) {
                         initial={{ width: 0 }}
                         whileInView={{ width: `${20 + i * 20}%` }}
                         transition={{ duration: 1, delay: 0.3 }}
-                        className="h-full rounded-full bg-gradient-to-r from-pink-500 to-cyan-400"
+                        className="h-full rounded-full bg-linear-to-r from-pink-500 to-cyan-400"
                       />
                     </div>
                     <p className="text-[10px] text-gray-600 mt-1 text-right">Difficulty</p>
@@ -333,7 +333,7 @@ export function LandingView({ onStart }: LandingViewProps) {
 
       {/* ===== FINAL CTA ===== */}
       <section className="relative py-24 sm:py-40 px-4">
-        <div className="absolute inset-0 bg-gradient-to-t from-pink-500/5 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-pink-500/5 via-transparent to-transparent" />
         <AnimatedSection className="relative z-10 text-center max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-5xl font-arcade neon-text-pink mb-4 sm:mb-6 leading-tight">
             READY TO<br />PLAY?
@@ -347,7 +347,7 @@ export function LandingView({ onStart }: LandingViewProps) {
             whileHover={{ scale: 1.05, boxShadow: '0 0 50px rgba(0,255,255,0.5), 0 0 100px rgba(0,255,255,0.2)' }}
             whileTap={{ scale: 0.95 }}
             onClick={onStart}
-            className="px-10 sm:px-14 py-4 sm:py-5 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 text-white font-arcade text-sm sm:text-base rounded-2xl shadow-[0_0_30px_rgba(0,255,255,0.4)] transition-all duration-300 cursor-pointer"
+            className="px-10 sm:px-14 py-4 sm:py-5 bg-linear-to-r from-cyan-400 via-blue-500 to-purple-600 text-white font-arcade text-sm sm:text-base rounded-2xl shadow-[0_0_30px_rgba(0,255,255,0.4)] transition-all duration-300 cursor-pointer"
           >
             <span className="flex items-center gap-3">
               <Zap className="w-5 h-5 sm:w-6 sm:h-6" />

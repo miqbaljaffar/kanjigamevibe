@@ -181,17 +181,23 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* --- SPOTIFY-LIKE MINI MUSIC PLAYER CARD --- */}
+      {/* --- SPOTIFY-LIKE MINI MUSIC PLAYER CARD (DRAGGABLE) --- */}
       {!showLanding && (
         <motion.div 
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 glass-card neon-border p-2 sm:p-3 flex items-center gap-3 rounded-2xl shadow-[0_0_15px_rgba(255,0,255,0.2)] cursor-pointer backdrop-blur-md bg-black/40"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 glass-card neon-border p-2 sm:p-3 flex items-center gap-3 rounded-2xl shadow-[0_0_15px_rgba(255,0,255,0.2)] cursor-grab active:cursor-grabbing backdrop-blur-md bg-black/40"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           whileHover={{ scale: 1.02 }}
+          
+          /* Tambahan props untuk fitur Drag/Geser */
+          drag
+          dragMomentum={false} // Membuatnya langsung berhenti saat dilepas (tidak meluncur)
+          whileDrag={{ scale: 1.05, opacity: 0.9 }} // Efek visual saat sedang ditarik
+          
           onClick={toggleMusic}
         >
           {/* Icon/Album Art (Piringan Hitam Berputar jika musik nyala) */}
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-pink-500/20 to-cyan-500/20 overflow-hidden relative">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-linear-to-br from-pink-500/20 to-cyan-500/20 overflow-hidden relative pointer-events-none">
             <motion.div 
               animate={{ rotate: isPlaying ? 360 : 0 }} 
               transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
@@ -201,13 +207,13 @@ export default function App() {
           </div>
 
           {/* Track Info (Otomatis Sembunyi di Mobile "hidden sm:flex") */}
-          <div className="hidden sm:flex flex-col mr-2 min-w-[120px]">
+          <div className="hidden sm:flex flex-col mr-2 min-w-30 pointer-events-none">
             <p className="text-sm font-bold text-white leading-tight">Neon JLPT Theme</p>
             <div className="flex items-center gap-2 mt-0.5">
               <p className="text-xs text-pink-400">{isPlaying ? 'Now Playing' : 'Paused'}</p>
               {/* Animasi Equalizer (Hanya muncul jika isPlaying true) */}
               {isPlaying && (
-                <div className="flex gap-[2px] items-end h-3">
+                <div className="flex gap-0.5 items-end h-3">
                   <motion.span animate={{ height: ['40%', '100%', '40%'] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1 bg-pink-400 rounded-t" />
                   <motion.span animate={{ height: ['70%', '30%', '70%'] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1 bg-pink-400 rounded-t" />
                   <motion.span animate={{ height: ['30%', '90%', '30%'] }} transition={{ repeat: Infinity, duration: 0.9 }} className="w-1 bg-pink-400 rounded-t" />
@@ -218,7 +224,7 @@ export default function App() {
 
           {/* Tombol Play/Pause */}
           <button 
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors ml-auto border border-white/10 group"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors ml-auto border border-white/10 group z-10"
             onClick={(e) => {
               e.stopPropagation(); // Mencegah trigger click ganda dengan container
               toggleMusic();
@@ -234,7 +240,7 @@ export default function App() {
       )}
 
       {/* Retro Grid Floor Effect */}
-      <div className="fixed bottom-0 left-0 w-full h-[30vh] bg-gradient-to-t from-pink-500/10 to-transparent pointer-events-none opacity-50 z-0"
+      <div className="fixed bottom-0 left-0 w-full h-[30vh] bg-linear-to-t from-pink-500/10 to-transparent pointer-events-none opacity-50 z-0"
         style={{ backgroundSize: '40px 40px', backgroundImage: 'linear-gradient(to right, rgba(255,0,255,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,0,255,0.1) 1px, transparent 1px)' }} />
     </div>
   );

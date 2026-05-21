@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mic, MicOff, User as UserIcon, Volume2, Square } from 'lucide-react';
+// Tambahkan import MessageSquare dan Flame untuk icon mode
+import { ArrowLeft, Mic, MicOff, User as UserIcon, Volume2, Square, MessageSquare, Flame } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { JLPTLevel } from '../hooks/useGame';
 
 interface ChatRoomViewProps {
-  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' | 'leaderboard') => void;
+  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' ) => void;
   jlptLevel: JLPTLevel;
 }
 
@@ -15,8 +16,9 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   
-  // 1. Tambahkan state untuk mode wawancara
   const [chatMode, setChatMode] = useState<'mentoring' | 'appaku'>('mentoring');
+  // STATE BARU: Untuk mengecek apakah user sudah memilih mode
+  const [hasSelectedMode, setHasSelectedMode] = useState(false);
   
   const recognitionRef = useRef<any>(null);
 
@@ -115,7 +117,6 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // 2. Kirim chatMode ke backend
         body: JSON.stringify({ messages: newMsgs, level: jlptLevel, mode: chatMode })
       });
       const data = await res.json();
@@ -128,6 +129,66 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
     }
   };
 
+  // ==========================================
+  // LAYAR 1: PEMILIHAN MODE SEBELUM CHAT
+  // ==========================================
+  if (!hasSelectedMode) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-4xl mx-auto p-4 sm:p-6 h-[85vh] sm:h-[80vh] flex flex-col justify-center relative"
+      >
+        {/* Tombol Kembali ke Dashboard */}
+        <div className="absolute top-4 left-4 sm:top-0 sm:left-0 z-10">
+          <button 
+            onClick={() => setView('dashboard')} 
+            className="p-3 glass-card hover:bg-white/10 flex items-center gap-2 transition-colors group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-sm font-bold hidden sm:inline">DASHBOARD</span>
+          </button>
+        </div>
+
+        <div className="text-center mb-10 mt-16 sm:mt-0">
+          <h2 className="text-3xl sm:text-4xl font-arcade neon-text-cyan mb-4">SELECT INTERVIEW MODE</h2>
+          <p className="text-gray-400 text-sm sm:text-base">Pilih kepribadian Sacho untuk sesi latihanmu kali ini.</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl mx-auto">
+          {/* Card Mentoring */}
+          <button
+            onClick={() => { setChatMode('mentoring'); setHasSelectedMode(true); }}
+            className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all group relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="p-4 bg-cyan-500/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
+              <MessageSquare className="w-8 h-8 text-cyan-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Mentoring Mode</h3>
+            <p className="text-sm text-gray-400">Sacho yang ramah dan suportif. Sangat cocok untuk latihan santai dan membangun kepercayaan diri.</p>
+          </button>
+
+          {/* Card Appaku */}
+          <button
+            onClick={() => { setChatMode('appaku'); setHasSelectedMode(true); }}
+            className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-red-500/50 hover:bg-red-500/10 transition-all group relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-linear-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="p-4 bg-red-500/20 rounded-full mb-4 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+              <Flame className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Appaku Mode <span className="text-red-500">😈</span></h3>
+            <p className="text-sm text-gray-400">Pressure interview ketat (Appaku mensetsu). Sacho akan merespon dengan dingin. Uji mentalmu!</p>
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // ==========================================
+  // LAYAR 2: INTERFACE SACHO CHAT UTAMA
+  // ==========================================
   return (
     <motion.div
       initial={{ opacity: 0, x: 50 }}
@@ -135,23 +196,24 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
       className="max-w-2xl mx-auto p-4 sm:p-6 h-[85vh] sm:h-[80vh] flex flex-col"
     >
       <header className="flex items-center gap-4 mb-4 sm:mb-6">
-        <button onClick={() => setView('dashboard')} className="p-2 glass-card hover:bg-white/10 shrink-0">
-          <ArrowLeft className="w-5 h-5" />
+        {/* Tombol Back sekarang mengembalikan ke layar pilihan mode, bukan langsung ke dashboard */}
+        <button onClick={() => setHasSelectedMode(false)} className="p-2 glass-card hover:bg-white/10 shrink-0 group">
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         </button>
         <div className="grow">
           <h2 className="text-lg sm:text-xl font-bold">SACHO'S OFFICE</h2>
           <p className="text-[10px] sm:text-xs text-cyan-400">JFT A2 Interview Practice</p>
         </div>
         
-        {/* 3. Dropdown untuk memilih mode wawancara */}
-        <select 
-          value={chatMode} 
-          onChange={(e) => setChatMode(e.target.value as 'mentoring' | 'appaku')}
-          className="bg-black/50 border border-cyan-500/30 text-cyan-400 text-xs sm:text-sm rounded-lg p-2 outline-none cursor-pointer focus:border-cyan-400 transition-colors"
-        >
-          <option value="mentoring">Mentoring Mode</option>
-          <option value="appaku">Appaku Mode 😈</option>
-        </select>
+        {/* Indikator Mode (Menggantikan Dropdown lama) */}
+        <div className={cn(
+          "px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-bold",
+          chatMode === 'mentoring' 
+            ? "bg-cyan-900/30 border-cyan-500/30 text-cyan-400" 
+            : "bg-red-900/30 border-red-500/30 text-red-400"
+        )}>
+          {chatMode === 'mentoring' ? 'Mentoring' : 'Appaku 😈'}
+        </div>
       </header>
 
       <div className="grow glass-card p-4 sm:p-6 overflow-y-auto mb-4 flex flex-col gap-4 text-sm sm:text-base">
@@ -159,7 +221,6 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
           <div className="text-center text-gray-500 mt-10 sm:mt-20">
             <UserIcon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 opacity-20" />
             <p>Sacho is waiting for your self-introduction.</p>
-            {/* 4. Ubah teks sambutan awal sesuai mode yang aktif */}
             <p className="text-[10px] sm:text-xs mt-2 italic">
               {chatMode === 'mentoring' 
                 ? '"Konichiwa. Jiko shoukai wo onegaishimasu."' 
@@ -176,7 +237,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
               "p-3 sm:p-4 rounded-2xl",
               m.role === 'user' 
                 ? "bg-pink-500 text-white rounded-br-sm" 
-                : (chatMode === 'appaku' ? "bg-red-900/40 border border-red-500/30 rounded-bl-sm" : "bg-white/10 rounded-bl-sm") // Warna merah samar untuk Appaku
+                : (chatMode === 'appaku' ? "bg-red-900/40 border border-red-500/30 rounded-bl-sm" : "bg-white/10 rounded-bl-sm")
             )}>
               {m.content}
             </div>

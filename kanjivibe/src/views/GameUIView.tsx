@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { JLPTLevel, GameMode, Difficulty, TIMER_MAP } from '../hooks/useGame';
 
 interface GameUIViewProps {
-  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' | 'leaderboard') => void;
+  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' ) => void;
   jlptLevel: JLPTLevel;
   game: any;
   userStats: any;
@@ -128,21 +128,21 @@ export function GameUIView({
           <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden shrink-0">
             <motion.div
               initial={{ width: '100%' }}
-              animate={{ width: `${(game.timeLeft / (TIMER_MAP[game.difficulty || 'normal'])) * 100}%` }}
+              animate={{ width: `${(game.timeLeft / TIMER_MAP[(game.difficulty as keyof typeof TIMER_MAP) || 'normal']) * 100}%` }}
               className={cn("h-full", game.timeLeft < 5 ? "bg-red-500" : "bg-cyan-500")}
             />
           </div>
 
-          <div className="glass-card p-6 sm:p-12 text-center relative flex-grow flex flex-col justify-center min-h-[200px] overflow-hidden">
+          <div className="glass-card p-6 sm:p-12 text-center relative grow flex flex-col justify-center min-h-50 overflow-hidden">
             {/* HANYA MENAMPILKAN PERTANYAAN, READING (KUNJAW) DIHILANGKAN DARI SINI */}
-            <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 relative z-10 break-words whitespace-normal w-full px-2">
+            <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 relative z-10 wrap-break-word whitespace-normal w-full px-2">
               {game.currentQuestion.question}
             </h3>
 
             {/* Boss Image or Mascot Mini */}
             {game.bossImage ? (
               <motion.div 
-                className="absolute inset-0 flex items-center justify-center z-[0] opacity-50 pointer-events-none overflow-hidden rounded-2xl"
+                className="absolute inset-0 flex items-center justify-center z-0 opacity-50 pointer-events-none overflow-hidden rounded-2xl"
                 animate={
                   game.gameState === 'feedback'
                     ? game.lastFeedback?.correct
@@ -175,10 +175,10 @@ export function GameUIView({
               <button
                 key={i}
                 onClick={() => game.handleAnswer(i)}
-                className="glass-card p-4 sm:p-6 text-base sm:text-xl hover:bg-pink-500/20 transition-all border-pink-500/20 hover:border-pink-500 text-left flex items-center justify-between group h-full min-h-[4rem] cursor-pointer"
+                className="glass-card p-4 sm:p-6 text-base sm:text-xl hover:bg-pink-500/20 transition-all border-pink-500/20 hover:border-pink-500 text-left flex items-center justify-between group h-full min-h-16 cursor-pointer"
               >
-                <span className="break-words whitespace-normal pr-4 flex-1 leading-tight">{opt}</span>
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                <span className="wrap-break-word whitespace-normal pr-4 flex-1 leading-tight">{opt}</span>
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 opacity-0 group-hover:opacity-100 shrink-0" />
               </button>
             ))}
           </div>
@@ -204,12 +204,12 @@ export function GameUIView({
           <div className="mt-4 sm:mt-8 max-w-md mx-auto">
             {/* READING (KUNJAW) DIPINDAHKAN KE SINI */}
             {game.currentQuestion?.reading && (
-              <p className="text-lg sm:text-xl text-cyan-400 mb-2 font-bold break-words whitespace-normal">
+              <p className="text-lg sm:text-xl text-cyan-400 mb-2 font-bold wrap-break-word whitespace-normal">
                 Cara baca: {game.currentQuestion.reading}
               </p>
             )}
             {/* Tambahan margin-bottom (mb-8) agar jarak ke tombol memadai */}
-            <p className="text-sm sm:text-xl text-gray-300 line-clamp-6 sm:line-clamp-4 break-words whitespace-normal mb-8">
+            <p className="text-sm sm:text-xl text-gray-300 line-clamp-6 sm:line-clamp-4 wrap-break-word whitespace-normal mb-8">
               {game.currentQuestion?.explanation}
             </p>
 
