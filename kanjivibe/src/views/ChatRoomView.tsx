@@ -70,7 +70,7 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
   };
 
   const startRecording = (e?: React.MouseEvent | React.TouchEvent) => {
-    if (e && e.type === 'touchstart') e.preventDefault(); 
+    // e.preventDefault() dihapus untuk menghindari error passive event listener
     if (isRecording) return;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -109,8 +109,7 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
   };
 
   const stopRecording = (e?: React.MouseEvent | React.TouchEvent) => {
-    if (e && (e.type === 'touchend' || e.type === 'touchcancel')) e.preventDefault();
-    
+    // e.preventDefault() dihapus untuk menghindari error passive event listener
     if (recognitionRef.current && isRecording) {
       recognitionRef.current.stop();
     }
