@@ -14,10 +14,13 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  
+  // 1. Tambahkan state untuk mode wawancara
+  const [chatMode, setChatMode] = useState<'mentoring' | 'appaku'>('mentoring');
+  
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
-    // Attempt to load voices early
     if (window.speechSynthesis) {
       window.speechSynthesis.getVoices();
     }
@@ -29,7 +32,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ja-JP';
-    utterance.pitch = 0.8; // Lower pitch for male voice
+    utterance.pitch = 0.8;
     utterance.rate = 1.0;
 
     const voices = window.speechSynthesis.getVoices();
@@ -69,7 +72,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'ja-JP';
-    recognition.continuous = true; // Diubah jadi true agar merekam terus sampai tombol dilepas
+    recognition.continuous = true;
     recognition.interimResults = false;
 
     recognition.onresult = (event: any) => {
@@ -112,13 +115,12 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMsgs, level: jlptLevel })
+        // 2. Kirim chatMode ke backend
+        body: JSON.stringify({ messages: newMsgs, level: jlptLevel, mode: chatMode })
       });
       const data = await res.json();
       setChatMessages([...newMsgs, { role: 'assistant', content: data.content }] as any);
       
-      // Audio otomatis dimatikan, user harus klik Play manual
-      // speakJapanese(data.content); 
     } catch (e) {
       console.error(e);
     } finally {
@@ -136,18 +138,33 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         <button onClick={() => setView('dashboard')} className="p-2 glass-card hover:bg-white/10 shrink-0">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div>
+        <div className="grow">
           <h2 className="text-lg sm:text-xl font-bold">SACHO'S OFFICE</h2>
           <p className="text-[10px] sm:text-xs text-cyan-400">JFT A2 Interview Practice</p>
         </div>
+        
+        {/* 3. Dropdown untuk memilih mode wawancara */}
+        <select 
+          value={chatMode} 
+          onChange={(e) => setChatMode(e.target.value as 'mentoring' | 'appaku')}
+          className="bg-black/50 border border-cyan-500/30 text-cyan-400 text-xs sm:text-sm rounded-lg p-2 outline-none cursor-pointer focus:border-cyan-400 transition-colors"
+        >
+          <option value="mentoring">Mentoring Mode</option>
+          <option value="appaku">Appaku Mode 😈</option>
+        </select>
       </header>
 
-      <div className="flex-grow glass-card p-4 sm:p-6 overflow-y-auto mb-4 flex flex-col gap-4 text-sm sm:text-base">
+      <div className="grow glass-card p-4 sm:p-6 overflow-y-auto mb-4 flex flex-col gap-4 text-sm sm:text-base">
         {chatMessages.length === 0 && (
           <div className="text-center text-gray-500 mt-10 sm:mt-20">
             <UserIcon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 opacity-20" />
             <p>Sacho is waiting for your self-introduction.</p>
-            <p className="text-[10px] sm:text-xs mt-2 italic">"Konichiwa. Jiko shoukai wo onegaishimasu."</p>
+            {/* 4. Ubah teks sambutan awal sesuai mode yang aktif */}
+            <p className="text-[10px] sm:text-xs mt-2 italic">
+              {chatMode === 'mentoring' 
+                ? '"Konichiwa. Jiko shoukai wo onegaishimasu."' 
+                : '"...Jiko shoukai shite kudasai. Mijikaku." (Tell me your intro. Keep it short.)'}
+            </p>
           </div>
         )}
         {chatMessages.map((m, i) => (
@@ -157,12 +174,13 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
           )}>
             <div className={cn(
               "p-3 sm:p-4 rounded-2xl",
-              m.role === 'user' ? "bg-pink-500 text-white rounded-br-sm" : "bg-white/10 rounded-bl-sm"
+              m.role === 'user' 
+                ? "bg-pink-500 text-white rounded-br-sm" 
+                : (chatMode === 'appaku' ? "bg-red-900/40 border border-red-500/30 rounded-bl-sm" : "bg-white/10 rounded-bl-sm") // Warna merah samar untuk Appaku
             )}>
               {m.content}
             </div>
             
-            {/* Tombol Play/Stop HANYA muncul untuk balasan AI/Sacho */}
             {m.role === 'assistant' && (
               <button 
                 onClick={() => toggleVoice(m.content)}
@@ -176,32 +194,15 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
         ))}
         
         {isChatLoading && <div className="text-cyan-400 text-xs sm:text-sm animate-pulse px-2">Sacho is typing...</div>}
-        
-        {/* Indikator Animasi saat Sacho berbicara */}
-        {isSpeaking && (
-          <div className="flex justify-center items-end gap-1 h-12 mt-4 mr-auto w-full max-w-[200px] p-4 rounded-2xl bg-cyan-900/20 border border-cyan-500/30">
-            {[...Array(15)].map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{ height: ["20%", "100%", "20%"] }}
-                transition={{ 
-                  duration: 0.4 + Math.random() * 0.4, 
-                  repeat: Infinity, 
-                  ease: "easeInOut" 
-                }}
-                className="w-1.5 sm:w-2 bg-cyan-400 rounded-t-full shadow-[0_0_8px_#00ffff]"
-              />
-            ))}
-          </div>
-        )}
       </div>
 
       <form onSubmit={(e) => {
         e.preventDefault();
-        const input = (e.target as any).message.value;
+        const inputElement = (e.currentTarget.elements.namedItem('message') as HTMLInputElement);
+        const input = inputElement.value;
         if (input) {
           handleSendMessage(input);
-          (e.target as any).reset();
+          e.currentTarget.reset();
         }
       }} className="flex gap-2">
         <button 
@@ -225,7 +226,7 @@ export function ChatRoomView({ setView, jlptLevel }: ChatRoomViewProps) {
           name="message"
           placeholder={isRecording ? "Listening... (Release to send)" : "Type or hold Mic..."}
           disabled={isRecording}
-          className="flex-grow p-3 sm:p-4 text-sm sm:text-base glass-card bg-white/5 border-white/10 focus:border-cyan-500 outline-none transition-colors disabled:opacity-50"
+          className="grow p-3 sm:p-4 text-sm sm:text-base glass-card bg-white/5 border-white/10 focus:border-cyan-500 outline-none transition-colors disabled:opacity-50"
         />
         <button 
           type="submit"

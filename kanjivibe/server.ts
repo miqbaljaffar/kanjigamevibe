@@ -161,14 +161,29 @@ app.post("/api/scan", async (req: Request, res: Response): Promise<void> => {
 
 app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { messages, level = 'N5' } = req.body;
+    // Tambahkan parameter mode dari req.body (default: mentoring)
+    const { messages, level = 'N5', mode = 'mentoring' } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       res.status(400).json({ error: "No messages provided" });
       return;
     }
 
-    const systemInstruction = `You are Sacho (Manager) at a Japanese Engineering company. 
+    // Tentukan System Instruction berdasarkan mode yang dipilih
+    let systemInstruction = "";
+    
+    if (mode === 'appaku') {
+      systemInstruction = `You are Sacho (Manager) at a Japanese Engineering company conducting an "Appaku Mensetsu" (pressure interview). 
+        The student is applying for a job. 
+        STRICT RULES:
+        1. Use ONLY JLPT ${level} level vocabulary and grammar.
+        2. Speak in polite form (desu/masu) but sound cold, strict, and highly skeptical.
+        3. Challenge the user's answers, point out weaknesses, ask difficult follow-up questions, and act unimpressed to test their stress tolerance.
+        4. Focus on workplace topics: self-introduction, skills, office etiquette, schedules.
+        5. Keep responses concise (under 2-3 sentences).
+        6. Ask demanding, context-aware questions about the latest real-world web development and tech trends happening in Japan right now.`;
+    } else {
+      systemInstruction = `You are Sacho (Manager) at a Japanese Engineering company. 
         The student is applying for a job. 
         STRICT RULES:
         1. Use ONLY JLPT ${level} level vocabulary and grammar.
@@ -177,10 +192,10 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
         4. Focus on workplace topics: self-introduction, skills, office etiquette, schedules.
         5. Keep responses concise (under 2-3 sentences).
         6. Ask context-aware questions about the latest real-world web development and tech trends happening in Japan right now.`;
+    }
 
     const lastMessage = messages[messages.length - 1].content;
 
-    // Try with googleSearch first, fallback without it
     let responseText: string | undefined;
     try {
       const chat = ai.chats.create({
@@ -194,7 +209,6 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
       responseText = response.text;
     } catch (toolError: any) {
       console.warn("Chat with googleSearch failed, retrying without tools:", toolError?.message || toolError);
-      // Fallback: retry without googleSearch tool
       const chat = ai.chats.create({
         model: "gemini-2.5-flash",
         config: { systemInstruction }
@@ -206,7 +220,6 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
     res.json({ content: responseText });
   } catch (error: any) {
     console.error("Chat error:", error?.message || error);
-    console.error("Chat error stack:", error?.stack);
     res.status(500).json({ error: "Failed to process chat", details: error?.message });
   }
 });
