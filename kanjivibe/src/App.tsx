@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sakura } from './components/Sakura';
 import { useGame, GameMode, Difficulty, JLPTLevel } from './hooks/useGame';
-import { Play, Pause, Disc3 } from 'lucide-react';
+import { Play, Pause, Disc3, ChevronRight } from 'lucide-react';
+import { cn } from './lib/utils';
 
 // Import views
 import { LandingView } from './views/LandingView';
@@ -45,6 +46,21 @@ export default function App() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const isUserPaused = useRef(false);
+
+  // --- STATE BARU UNTUK MUSIC PLAYER EXPAND ---
+  const [isMusicExpanded, setIsMusicExpanded] = useState(true);
+
+  // --- CONTEXT-AWARE AUTO COLLAPSE ---
+  useEffect(() => {
+    // Mengecil otomatis saat masuk ke mode game, chat, atau scan agar layar lega
+    if (view === 'game' || view === 'chat' || view === 'scan') {
+      setIsMusicExpanded(false);
+    } 
+    // Mengembang otomatis saat kembali ke dashboard
+    else if (view === 'dashboard') {
+      setIsMusicExpanded(true);
+    }
+  }, [view]);
 
   const toggleMusic = () => {
     if (audioRef.current) {
@@ -225,54 +241,107 @@ export default function App() {
       {/* --- SPOTIFY-LIKE MINI MUSIC PLAYER CARD --- */}
       {!showLanding && view !== 'error' && (
         <motion.div 
-          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 glass-card neon-border p-2 sm:p-3 flex items-center gap-3 rounded-2xl shadow-[0_0_15px_rgba(255,0,255,0.2)] cursor-grab active:cursor-grabbing backdrop-blur-md bg-black/40"
+          layout // Memungkinkan Framer Motion menganimasikan perubahan ukuran (width)
+          className={cn(
+            "fixed z-50 glass-card flex items-center transition-all backdrop-blur-md bg-black/40 cursor-grab active:cursor-grabbing",
+            isMusicExpanded 
+              // Tampilan saat mengembang (Besar)
+              ? "bottom-20 right-4 sm:bottom-6 sm:right-6 p-2 sm:p-3 gap-3 rounded-2xl neon-border shadow-[0_0_15px_rgba(255,0,255,0.2)]" 
+              // Tampilan saat menciut (Kecil menempel di kanan)
+              : "bottom-20 right-0 p-2 pl-3 gap-0 rounded-l-2xl border-y-2 border-l-2 border-r-0 border-pink-500 opacity-70 hover:opacity-100 shadow-[0_0_10px_rgba(255,0,255,0.3)]"
+          )}
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          whileHover={{ scale: 1.02 }}
-          // BEST PRACTICE: Memberikan constraint agar tidak hilang ke luar layar saat didrag
-          drag
-          dragConstraints={{ left: -20, right: 20, top: -20, bottom: 20 }}
-          dragElastic={0.2}
+          whileHover={isMusicExpanded ? { scale: 1.02 } : { x: -5 }} // Efek hover
+          
+          // --- PERUBAHAN UTAMA DRAG ---
+          drag="y" // Mengunci pergerakan drag hanya pada sumbu Vertikal (Y)
+          dragConstraints={{ top: -500, bottom: 20 }} // Bisa digeser ke atas sampai -500px dan ke bawah 20px
+          dragElastic={0.1}
           dragMomentum={false} 
           whileDrag={{ scale: 1.05, opacity: 0.9 }} 
-          onClick={toggleMusic}
+          
+          onClick={() => {
+            if (!isMusicExpanded) setIsMusicExpanded(true); // Klik untuk membesarkan
+          }}
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-linear-to-br from-pink-500/20 to-cyan-500/20 overflow-hidden relative pointer-events-none">
-            <motion.div 
-              animate={{ rotate: isPlaying ? 360 : 0 }} 
-              transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-            >
-              <Disc3 className="text-pink-400" size={26} />
-            </motion.div>
-          </div>
-
-          <div className="hidden sm:flex flex-col mr-2 min-w-30 pointer-events-none">
-            <p className="text-sm font-bold text-white leading-tight">Neon JLPT Theme</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-xs text-pink-400">{isPlaying ? 'Now Playing' : 'Paused'}</p>
-              {isPlaying && (
-                <div className="flex gap-0.5 items-end h-3">
-                  <motion.span animate={{ height: ['40%', '100%', '40%'] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1 bg-pink-400 rounded-t" />
-                  <motion.span animate={{ height: ['70%', '30%', '70%'] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1 bg-pink-400 rounded-t" />
-                  <motion.span animate={{ height: ['30%', '90%', '30%'] }} transition={{ repeat: Infinity, duration: 0.9 }} className="w-1 bg-pink-400 rounded-t" />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <button 
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors ml-auto border border-white/10 group z-10 cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation(); 
-              toggleMusic();
-            }}
-          >
-            {isPlaying ? (
-              <Pause size={18} className="text-white fill-white group-hover:text-pink-400 group-hover:fill-pink-400 transition-colors" />
-            ) : (
-              <Play size={18} className="text-white fill-white ml-1 group-hover:text-cyan-400 group-hover:fill-cyan-400 transition-colors" />
+          {/* Ikon Piringan (Selalu Tampil) */}
+          <motion.div 
+            layout
+            className={cn(
+              "rounded-full flex items-center justify-center bg-linear-to-br from-pink-500/20 to-cyan-500/20 overflow-hidden relative pointer-events-none shrink-0",
+              isMusicExpanded ? "w-10 h-10 sm:w-12 sm:h-12" : "w-8 h-8"
             )}
-          </button>
+          >
+            <motion.div animate={{ rotate: isPlaying ? 360 : 0 }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }}>
+              <Disc3 className="text-pink-400" size={isMusicExpanded ? 26 : 18} />
+            </motion.div>
+          </motion.div>
+
+          {/* UI Saat Menciut (Hanya Tombol Play/Pause Mini) */}
+          {!isMusicExpanded && (
+            <button 
+              className="ml-2 mr-1 z-10 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation(); 
+                toggleMusic();
+              }}
+            >
+              {isPlaying ? (
+                <Pause size={14} className="text-white hover:text-pink-400 transition-colors" />
+              ) : (
+                <Play size={14} className="text-white ml-0.5 hover:text-cyan-400 transition-colors" />
+              )}
+            </button>
+          )}
+
+          {/* UI Saat Mengembang (Detail Penuh) */}
+          {isMusicExpanded && (
+            <motion.div 
+              initial={{ opacity: 0, width: 0 }} 
+              animate={{ opacity: 1, width: "auto" }} 
+              className="flex items-center gap-3 overflow-hidden"
+            >
+              <div className="hidden sm:flex flex-col mr-2 min-w-30 pointer-events-none shrink-0">
+                <p className="text-sm font-bold text-white leading-tight">Neon JLPT Theme</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-xs text-pink-400">{isPlaying ? 'Now Playing' : 'Paused'}</p>
+                  {isPlaying && (
+                    <div className="flex gap-0.5 items-end h-3">
+                      <motion.span animate={{ height: ['40%', '100%', '40%'] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1 bg-pink-400 rounded-t" />
+                      <motion.span animate={{ height: ['70%', '30%', '70%'] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1 bg-pink-400 rounded-t" />
+                      <motion.span animate={{ height: ['30%', '90%', '30%'] }} transition={{ repeat: Infinity, duration: 0.9 }} className="w-1 bg-pink-400 rounded-t" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <button 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors ml-auto border border-white/10 group z-10 cursor-pointer shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  toggleMusic();
+                }}
+              >
+                {isPlaying ? (
+                  <Pause size={18} className="text-white fill-white group-hover:text-pink-400 group-hover:fill-pink-400 transition-colors" />
+                ) : (
+                  <Play size={18} className="text-white fill-white ml-1 group-hover:text-cyan-400 group-hover:fill-cyan-400 transition-colors" />
+                )}
+              </button>
+
+              {/* Tombol Tutup (Minimize) ke Kanan */}
+              <button 
+                className="ml-1 p-1 z-10 cursor-pointer text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  setIsMusicExpanded(false);
+                }}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </motion.div>
+          )}
         </motion.div>
       )}
 

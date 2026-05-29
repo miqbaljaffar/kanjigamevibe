@@ -47,7 +47,7 @@ app.post("/api/generate", async (req: Request, res: Response): Promise<void> => 
     const { mode, count = 10, level = 'N5' } = req.body;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: `Generate a ${count}-question quiz for Japanese JLPT ${level} level. 
       Mode: ${mode}. 
       Return a JSON array of objects with fields: 
@@ -93,7 +93,7 @@ app.post("/api/scan", async (req: Request, res: Response): Promise<void> => {
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: [
         {
           inlineData: {
@@ -199,7 +199,7 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
     let responseText: string | undefined;
     try {
       const chat = ai.chats.create({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         config: {
           systemInstruction,
           tools: [{ googleSearch: {} }]
@@ -210,7 +210,7 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
     } catch (toolError: any) {
       console.warn("Chat with googleSearch failed, retrying without tools:", toolError?.message || toolError);
       const chat = ai.chats.create({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         config: { systemInstruction }
       });
       const response = await chat.sendMessage({ message: lastMessage });

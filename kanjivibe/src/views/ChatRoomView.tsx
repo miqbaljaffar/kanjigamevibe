@@ -165,7 +165,7 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
           {/* BEST PRACTICE: Desain tombol Back minimalis yang diseragamkan dengan GameUIView */}
           <button 
-            onClick={() => setView('dashboard')} 
+            onClick={() => { setChatMessages([]); setView('dashboard'); }} 
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer group"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
@@ -179,8 +179,8 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl mx-auto">
-          <button
-            onClick={() => { setChatMode('mentoring'); setHasSelectedMode(true); }}
+            <button
+              onClick={() => { setChatMessages([]); setChatMode('mentoring'); setHasSelectedMode(true); }}
             className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all group relative overflow-hidden cursor-pointer"
           >
             <div className="absolute inset-0 bg-linear-to-b from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -192,7 +192,7 @@ export function ChatRoomView({ setView, jlptLevel, onError }: ChatRoomViewProps)
           </button>
 
           <button
-            onClick={() => { setChatMode('appaku'); setHasSelectedMode(true); }}
+            onClick={() => { setChatMessages([]); setChatMode('appaku'); setHasSelectedMode(true); }}
             className="glass-card p-8 flex flex-col items-center text-center border-2 border-transparent hover:border-red-500/50 hover:bg-red-500/10 transition-all group relative overflow-hidden cursor-pointer"
           >
             <div className="absolute inset-0 bg-linear-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

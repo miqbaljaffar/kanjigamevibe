@@ -141,7 +141,15 @@ export function GameUIView({
 
           <div className="glass-card p-6 sm:p-12 text-center relative grow flex flex-col justify-center min-h-[30dvh] overflow-hidden">
             <div className="flex-1 overflow-y-auto max-h-[30dvh] sm:max-h-[40dvh] w-full flex items-center justify-center z-10 relative">
-              <h3 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 wrap-break-words whitespace-normal w-full px-2">
+              {/* === KODE YANG DIPERBARUI: UKURAN FONT DINAMIS === */}
+              <h3 className={cn(
+                "font-bold mb-4 wrap-break-words whitespace-normal w-full px-4 sm:px-8 transition-all duration-300",
+                game.currentQuestion.question.length > 80 
+                  ? "text-base sm:text-lg md:text-xl text-left font-sans leading-relaxed" // Untuk paragraf/teks panjang
+                  : game.currentQuestion.question.length > 25
+                  ? "text-2xl sm:text-3xl md:text-4xl text-center" // Untuk kalimat sedang
+                  : "text-4xl sm:text-5xl md:text-6xl text-center" // Untuk 1-2 kata pendek
+              )}>
                 {game.currentQuestion.question}
               </h3>
             </div>
