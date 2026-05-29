@@ -26,6 +26,16 @@ export function GameUIView({
 }: GameUIViewProps) {
   const [pendingMode, setPendingMode] = useState<GameMode | null>(null);
   const [showQris, setShowQris] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
+
+  const handleBackClick = () => {
+    // Tampilkan konfirmasi jika sedang bermain atau sedang menyiapkan soal
+    if (game.gameState === 'playing' || game.gameState === 'loading') {
+      setConfirmExit(true);
+    } else {
+      setView('dashboard');
+    }
+  };
 
   return (
     <motion.div
@@ -36,18 +46,23 @@ export function GameUIView({
     >
       {/* HEADER BAGIAN ATAS */}
       <div className="flex justify-between items-center mb-6 sm:mb-12 shrink-0">
-        {/* BEST PRACTICE: Desain tombol Back diseragamkan dengan animasi geser */}
-        <button 
-          onClick={() => setView('dashboard')} 
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer group"
-        >
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
-          <span>Back</span>
-        </button>
+        {/* BEST PRACTICE: Sembunyikan Back saat bermain, tampilkan saat idle/menu */}
+        {game.gameState !== 'playing' && game.gameState !== 'loading' && (
+          <button 
+            onClick={handleBackClick} 
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer group"
+          >
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+            <span>Back</span>
+          </button>
+        )}
+        {(game.gameState === 'playing' || game.gameState === 'loading') && (
+          <div />
+        )}
         
         <div className="flex flex-col items-end">
           <p className="text-[10px] font-arcade text-cyan-500 mb-1">LVL: {jlptLevel}</p>
-          <div className="flex gap-4 sm:gap-6">
+          <div className="flex gap-4 sm:gap-6 items-center">
             <div className="text-right">
               <p className="text-[8px] sm:text-xs text-gray-400 uppercase font-arcade">Score</p>
               <p className="text-lg sm:text-2xl font-arcade neon-text-cyan">{game.score}</p>
@@ -56,6 +71,14 @@ export function GameUIView({
               <p className="text-[8px] sm:text-xs text-gray-400 uppercase font-arcade">Streak</p>
               <p className="text-lg sm:text-2xl font-arcade neon-text-pink">x{game.streak}</p>
             </div>
+            {(game.gameState === 'playing' || game.gameState === 'loading') && (
+              <button
+                onClick={handleBackClick}
+                className="ml-4 px-3 py-2 bg-red-500/20 border border-red-500 text-red-400 hover:bg-red-500/40 transition-colors rounded-lg text-xs sm:text-sm font-bold cursor-pointer whitespace-nowrap"
+              >
+                AKHIRI
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -316,6 +339,47 @@ export function GameUIView({
               >
                 TUTUP
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* KONFIRMASI KELUAR SAAT SEDANG BERMAIN */}
+      <AnimatePresence>
+        {confirmExit && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="bg-gray-900/95 border border-pink-500/20 rounded-2xl p-6 max-w-md w-full shadow-[0_0_30px_rgba(0,0,0,0.6)]"
+            >
+              <h3 className="text-lg sm:text-xl font-bold neon-text-pink mb-2">Keluar dari permainan?</h3>
+              <p className="text-sm text-gray-300 mb-6">Jika kamu keluar sekarang, permainan akan berakhir dan progress saat ini akan hilang. Apakah kamu yakin?</p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmExit(false)}
+                  className="flex-1 py-3 bg-gray-800 text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-800/90 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => {
+                    setConfirmExit(false);
+                    if (game.endGame) game.endGame();
+                    setView('dashboard');
+                  }}
+                  className="flex-1 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
+                >
+                  Keluar
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

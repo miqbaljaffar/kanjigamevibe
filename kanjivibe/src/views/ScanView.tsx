@@ -137,9 +137,9 @@ export function ScanView({ setView, jlptLevel, game, onError }: ScanViewProps) {
               animate={{ y: '105%' }}
               transition={{
                 repeat: Infinity,
-                repeatType: "reverse",
-                duration: 2.2,
-                ease: "easeInOut"
+                repeatType: "loop",
+                duration: 1.8,
+                ease: "linear"
               }}
               className="absolute left-0 right-0 h-1 bg-yellow-500 shadow-[0_0_15px_#eab308,0_0_30px_#eab308] z-22"
             />

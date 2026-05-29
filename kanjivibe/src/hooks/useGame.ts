@@ -145,6 +145,12 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     }
   }, [currentIndex, gameState, mode, questions]);
 
+  const endGame = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+    setGameState('ended');
+  };
+
   return {
     questions,
     currentIndex,
@@ -158,6 +164,7 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     startGame,
     handleAnswer,
     nextQuestion, // Diekspor agar bisa digunakan di UI tombol "Lanjut"
-    restart: () => startGame()
+    restart: () => startGame(),
+    endGame
   };
 }
