@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { JLPTLevel, GameMode, Difficulty, TIMER_MAP } from '../hooks/useGame';
 
 interface GameUIViewProps {
-  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan' ) => void;
+  setView: (view: 'dashboard' | 'game' | 'chat' | 'scan') => void;
   jlptLevel: JLPTLevel;
   game: any;
   userStats: any;
@@ -48,8 +48,8 @@ export function GameUIView({
       <div className="flex justify-between items-center mb-6 sm:mb-12 shrink-0">
         {/* BEST PRACTICE: Sembunyikan Back saat bermain, tampilkan saat idle/menu */}
         {game.gameState !== 'playing' && game.gameState !== 'loading' && (
-          <button 
-            onClick={handleBackClick} 
+          <button
+            onClick={handleBackClick}
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer group"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
@@ -59,7 +59,7 @@ export function GameUIView({
         {(game.gameState === 'playing' || game.gameState === 'loading') && (
           <div />
         )}
-        
+
         <div className="flex flex-col items-end">
           <p className="text-[10px] font-arcade text-cyan-500 mb-1">LVL: {jlptLevel}</p>
           <div className="flex gap-4 sm:gap-6 items-center">
@@ -106,15 +106,15 @@ export function GameUIView({
         <div className="glass-card p-6 sm:p-12 text-center relative animate-in fade-in zoom-in duration-200">
           <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
             {/* BEST PRACTICE: Desain tombol Back diseragamkan dengan header utama */}
-            <button 
-              onClick={() => setPendingMode(null)} 
+            <button
+              onClick={() => setPendingMode(null)}
               className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm sm:text-base cursor-pointer group"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
               <span>Back</span>
             </button>
           </div>
-          
+
           <h2 className="text-xl sm:text-3xl font-arcade mb-8 text-cyan-400 mt-6 sm:mt-0">SELECT SPEED</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {(['easy', 'normal', 'hard', 'extreme'] as Difficulty[]).map(d => (
@@ -125,15 +125,15 @@ export function GameUIView({
                   setMode(pendingMode);
                   setTimeout(() => {
                     game.startGame(undefined, undefined, pendingMode);
-                    setPendingMode(null); 
+                    setPendingMode(null);
                   }, 50);
                 }}
                 className={cn(
                   "p-4 border rounded-lg transition-all capitalize text-sm sm:text-base font-bold cursor-pointer hover:scale-105",
                   d === 'easy' ? "border-green-500/30 hover:bg-green-500/20 text-green-400" :
-                  d === 'normal' ? "border-yellow-500/30 hover:bg-yellow-500/20 text-yellow-400" :
-                  d === 'hard' ? "border-orange-500/30 hover:bg-orange-500/20 text-orange-400" :
-                  "border-red-500/30 hover:bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+                    d === 'normal' ? "border-yellow-500/30 hover:bg-yellow-500/20 text-yellow-400" :
+                      d === 'hard' ? "border-orange-500/30 hover:bg-orange-500/20 text-orange-400" :
+                        "border-red-500/30 hover:bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
                 )}
               >
                 {d}
@@ -167,35 +167,35 @@ export function GameUIView({
               {/* === KODE YANG DIPERBARUI: UKURAN FONT DINAMIS === */}
               <h3 className={cn(
                 "font-bold mb-4 wrap-break-words whitespace-normal w-full px-4 sm:px-8 transition-all duration-300",
-                game.currentQuestion.question.length > 80 
+                game.currentQuestion.question.length > 80
                   ? "text-base sm:text-lg md:text-xl text-left font-sans leading-relaxed" // Untuk paragraf/teks panjang
                   : game.currentQuestion.question.length > 25
-                  ? "text-2xl sm:text-3xl md:text-4xl text-center" // Untuk kalimat sedang
-                  : "text-4xl sm:text-5xl md:text-6xl text-center" // Untuk 1-2 kata pendek
+                    ? "text-2xl sm:text-3xl md:text-4xl text-center" // Untuk kalimat sedang
+                    : "text-4xl sm:text-5xl md:text-6xl text-center" // Untuk 1-2 kata pendek
               )}>
                 {game.currentQuestion.question}
               </h3>
             </div>
 
             {game.bossImage ? (
-              <motion.div 
+              <motion.div
                 className="absolute inset-0 flex items-center justify-center z-0 opacity-50 pointer-events-none overflow-hidden rounded-2xl"
                 animate={
                   game.gameState === 'feedback'
                     ? game.lastFeedback?.correct
-                      ? { opacity: [0.5, 0.9, 0.5], scale: [1, 1.1, 1], filter: ["brightness(1) drop-shadow(0 0 10px #00ffff)", "brightness(2) drop-shadow(0 0 30px #00ffff)", "brightness(1) drop-shadow(0 0 10px #00ffff)"] } 
-                      : { x: [-10, 10, -15, 15, -5, 5, 0], filter: ["hue-rotate(0deg)", "hue-rotate(90deg) contrast(200%)", "hue-rotate(0deg)"] } 
-                    : { y: [0, -10, 0], filter: ["drop-shadow(0 0 15px #ff00ff)", "drop-shadow(0 0 25px #00ffff)", "drop-shadow(0 0 15px #ff00ff)"] } 
+                      ? { opacity: [0.5, 0.9, 0.5], scale: [1, 1.1, 1], filter: ["brightness(1) drop-shadow(0 0 10px #00ffff)", "brightness(2) drop-shadow(0 0 30px #00ffff)", "brightness(1) drop-shadow(0 0 10px #00ffff)"] }
+                      : { x: [-10, 10, -15, 15, -5, 5, 0], filter: ["hue-rotate(0deg)", "hue-rotate(90deg) contrast(200%)", "hue-rotate(0deg)"] }
+                    : { y: [0, -10, 0], filter: ["drop-shadow(0 0 15px #ff00ff)", "drop-shadow(0 0 25px #00ffff)", "drop-shadow(0 0 15px #ff00ff)"] }
                 }
-                transition={{ 
-                  duration: game.gameState === 'feedback' ? 0.4 : 4, 
+                transition={{
+                  duration: game.gameState === 'feedback' ? 0.4 : 4,
                   repeat: game.gameState === 'feedback' ? 0 : Infinity,
                   ease: "easeInOut"
                 }}
               >
-                <img 
-                  src={game.bossImage} 
-                  alt="Boss" 
+                <img
+                  src={game.bossImage}
+                  alt="Boss"
                   className="w-full h-full object-cover opacity-60 mix-blend-screen pixelated"
                 />
               </motion.div>
@@ -236,7 +236,7 @@ export function GameUIView({
               +{game.lastFeedback.points} PTS
             </motion.p>
           )}
-          
+
           <div className="mt-4 sm:mt-8 max-w-md mx-auto w-full">
             {game.currentQuestion?.reading && (
               <p className="text-lg sm:text-xl text-cyan-400 mb-2 font-bold wrap-break-words whitespace-normal">
@@ -271,7 +271,7 @@ export function GameUIView({
               <p className="text-2xl sm:text-4xl font-arcade text-pink-400">x{game.streak}</p>
             </div>
           </div>
-          
+
           <div className="flex flex-col gap-3 w-full">
             <button
               onClick={() => {
@@ -306,14 +306,14 @@ export function GameUIView({
       {/* MODAL QRIS DONASI - BEST PRACTICE */}
       <AnimatePresence>
         {showQris && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             // Overlay latar belakang gelap menutupi seluruh layar secara penuh
             className="fixed inset-0 z-100 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4"
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
@@ -322,13 +322,13 @@ export function GameUIView({
             >
               <h3 className="text-xl sm:text-2xl font-arcade neon-text-cyan mb-2 text-center">DUKUNG KAMI!</h3>
               <p className="text-sm text-gray-300 mb-6 font-mono text-center">
-                Scan QRIS di bawah ini untuk mendukung pengembangan game. Arigatou Gozaimasu! ✨
+                Scan QRIS DANA di bawah ini untuk mendukung pengembangan game. Arigatou Gozaimasu! ✨
               </p>
-              
+
               <div className="bg-white p-3 rounded-xl mb-6 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-                <img 
-                  src="/qris.jpeg" 
-                  alt="QRIS Donasi" 
+                <img
+                  src="/qris.jpeg"
+                  alt="QRIS Donasi"
                   className="w-48 h-48 sm:w-56 sm:h-56 object-cover rounded-lg"
                 />
               </div>
