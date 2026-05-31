@@ -134,7 +134,7 @@ app.post("/api/scan", async (req: Request, res: Response): Promise<void> => {
 
     const parsed = JSON.parse(response.text as string);
     let bossImageBase64 = null;
-    
+
     if (parsed.theme) {
       try {
         const imageResult = await ai.models.generateImages({
@@ -171,7 +171,7 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
 
     // Tentukan System Instruction berdasarkan mode yang dipilih
     let systemInstruction = "";
-    
+
     if (mode === 'appaku') {
       systemInstruction = `You are Sacho (Manager) at a Japanese Engineering company conducting an "Appaku Mensetsu" (pressure interview). 
         The student is applying for a job. 
@@ -199,7 +199,9 @@ app.post("/api/chat", async (req: Request, res: Response): Promise<void> => {
     let responseText: string | undefined;
     try {
       const chat = ai.chats.create({
+        //model: "gemini-3-flash-preview",
         model: "gemini-2.5-flash",
+        //model: "gemini-3.5-flash",
         config: {
           systemInstruction,
           tools: [{ googleSearch: {} }]
