@@ -25,21 +25,28 @@ export default function App() {
       xp: 0
     };
   });
-  
+
   const [showLanding, setShowLanding] = useState(true);
-  
+
   const [view, setView] = useState<'dashboard' | 'game' | 'chat' | 'scan' | 'error'>('dashboard');
   const [errorDetails, setErrorDetails] = useState({ type: 'unknown' as 'offline' | 'api_limit' | 'unknown', message: '' });
-  
+
+  // --- FUNGSI GLOBAL ERROR (Dipindahkan ke atas agar bisa di-pass ke useGame tanpa memicu ReferenceError) ---
+  const triggerGlobalError = (type: 'offline' | 'api_limit' | 'unknown', message: string) => {
+    setErrorDetails({ type, message });
+    setView('error');
+  };
+
   const [jlptLevel, setJlptLevel] = useState<JLPTLevel>(() => {
     return (localStorage.getItem('neon_jlpt_level') as JLPTLevel) || 'N5';
   });
   const [showLevelSelect, setShowLevelSelect] = useState(!localStorage.getItem('neon_jlpt_level'));
-  
+
   const [mode, setMode] = useState<GameMode>('kanji-meaning');
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
 
-  const game = useGame(mode, difficulty, jlptLevel);
+  // --- INISIALISASI GAME DENGAN MENGIRIMKAN CALLBACK ERROR ---
+  const game = useGame(mode, difficulty, jlptLevel, triggerGlobalError);
   const statsUpdateRef = useRef(false);
 
   // --- MUSIC PLAYER STATE & REF ---
@@ -47,7 +54,7 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const isUserPaused = useRef(false);
 
-  // --- STATE BARU UNTUK MUSIC PLAYER EXPAND ---
+  // --- STATE UNTUK MUSIC PLAYER EXPAND ---
   const [isMusicExpanded, setIsMusicExpanded] = useState(true);
 
   // --- CONTEXT-AWARE AUTO COLLAPSE ---
@@ -55,7 +62,7 @@ export default function App() {
     // Mengecil otomatis saat masuk ke mode game, chat, atau scan agar layar lega
     if (view === 'game' || view === 'chat' || view === 'scan') {
       setIsMusicExpanded(false);
-    } 
+    }
     // Mengembang otomatis saat kembali ke dashboard
     else if (view === 'dashboard') {
       setIsMusicExpanded(true);
@@ -66,17 +73,17 @@ export default function App() {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
-        isUserPaused.current = true; 
+        isUserPaused.current = true;
       } else {
         audioRef.current.play().catch(e => console.log("Play failed:", e));
-        isUserPaused.current = false; 
+        isUserPaused.current = false;
       }
     }
   };
 
   useEffect(() => {
     if (audioRef.current) {
-      if (view === 'chat' || view === 'error') { 
+      if (view === 'chat' || view === 'error') {
         audioRef.current.pause();
       } else if (!isUserPaused.current) {
         audioRef.current.play().catch(e => console.log("Auto-play prevented by browser:", e));
@@ -117,18 +124,12 @@ export default function App() {
     }
   }, [game.gameState, game]);
 
-  // --- FUNGSI GLOBAL ERROR ---
-  const triggerGlobalError = (type: 'offline' | 'api_limit' | 'unknown', message: string) => {
-    setErrorDetails({ type, message });
-    setView('error');
-  };
-
   // --- PANTAU KONEKSI INTERNET ---
   useEffect(() => {
     const handleOffline = () => {
       triggerGlobalError('offline', 'Koneksi internet terputus. Pastikan perangkatmu terhubung ke jaringan agar sistem AI dapat berjalan.');
     };
-    
+
     if (!navigator.onLine) {
       handleOffline();
     }
@@ -157,7 +158,7 @@ export default function App() {
   const handleStartApp = () => {
     setShowLanding(false);
     if (audioRef.current && !isUserPaused.current) {
-        audioRef.current.play().catch(e => console.log("Play failed after click:", e));
+      audioRef.current.play().catch(e => console.log("Play failed after click:", e));
     }
   }
 
@@ -165,10 +166,10 @@ export default function App() {
     <div className="min-h-dvh relative">
       <Sakura />
 
-      <audio 
-        ref={audioRef} 
-        src="/bgm.mp3" 
-        loop 
+      <audio
+        ref={audioRef}
+        src="/bgm.mp3"
+        loop
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       />
@@ -184,7 +185,7 @@ export default function App() {
               {view === 'dashboard' && (
                 <DashboardView
                   userStats={userStats}
-                  setView={setView as any} 
+                  setView={setView as any}
                   showLevelSelect={showLevelSelect}
                   setShowLevelSelect={setShowLevelSelect}
                   jlptLevel={jlptLevel}
@@ -203,7 +204,7 @@ export default function App() {
                   setDifficulty={setDifficulty}
                 />
               )}
-              
+
               {view === 'chat' && (
                 <ChatRoomView
                   setView={setView as any}
@@ -221,7 +222,7 @@ export default function App() {
               )}
 
               {view === 'error' && (
-                <ErrorView 
+                <ErrorView
                   errorMessage={errorDetails.message}
                   errorType={errorDetails.type}
                   onReboot={() => {
@@ -240,33 +241,29 @@ export default function App() {
 
       {/* --- SPOTIFY-LIKE MINI MUSIC PLAYER CARD --- */}
       {!showLanding && view !== 'error' && (
-        <motion.div 
-          layout // Memungkinkan Framer Motion menganimasikan perubahan ukuran (width)
+        <motion.div
+          layout
           className={cn(
             "fixed z-50 glass-card flex items-center transition-all backdrop-blur-md bg-black/40 cursor-grab active:cursor-grabbing",
-            isMusicExpanded 
-              // Tampilan saat mengembang (Besar)
-              ? "bottom-20 right-4 sm:bottom-6 sm:right-6 p-2 sm:p-3 gap-3 rounded-2xl neon-border shadow-[0_0_15px_rgba(255,0,255,0.2)]" 
-              // Tampilan saat menciut (Kecil menempel di kanan)
+            isMusicExpanded
+              ? "bottom-20 right-4 sm:bottom-6 sm:right-6 p-2 sm:p-3 gap-3 rounded-2xl neon-border shadow-[0_0_15px_rgba(255,0,255,0.2)]"
               : "bottom-20 right-0 p-2 pl-3 gap-0 rounded-l-2xl border-y-2 border-l-2 border-r-0 border-pink-500 opacity-70 hover:opacity-100 shadow-[0_0_10px_rgba(255,0,255,0.3)]"
           )}
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          whileHover={isMusicExpanded ? { scale: 1.02 } : { x: -5 }} // Efek hover
-          
-          // --- PERUBAHAN UTAMA DRAG ---
-          drag="y" // Mengunci pergerakan drag hanya pada sumbu Vertikal (Y)
-          dragConstraints={{ top: -500, bottom: 20 }} // Bisa digeser ke atas sampai -500px dan ke bawah 20px
+          whileHover={isMusicExpanded ? { scale: 1.02 } : { x: -5 }}
+
+          drag="y"
+          dragConstraints={{ top: -500, bottom: 20 }}
           dragElastic={0.1}
-          dragMomentum={false} 
-          whileDrag={{ scale: 1.05, opacity: 0.9 }} 
-          
+          dragMomentum={false}
+          whileDrag={{ scale: 1.05, opacity: 0.9 }}
+
           onClick={() => {
-            if (!isMusicExpanded) setIsMusicExpanded(true); // Klik untuk membesarkan
+            if (!isMusicExpanded) setIsMusicExpanded(true);
           }}
         >
-          {/* Ikon Piringan (Selalu Tampil) */}
-          <motion.div 
+          <motion.div
             layout
             className={cn(
               "rounded-full flex items-center justify-center bg-linear-to-br from-pink-500/20 to-cyan-500/20 overflow-hidden relative pointer-events-none shrink-0",
@@ -278,12 +275,11 @@ export default function App() {
             </motion.div>
           </motion.div>
 
-          {/* UI Saat Menciut (Hanya Tombol Play/Pause Mini) */}
           {!isMusicExpanded && (
-            <button 
+            <button
               className="ml-2 mr-1 z-10 cursor-pointer"
               onClick={(e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 toggleMusic();
               }}
             >
@@ -295,11 +291,10 @@ export default function App() {
             </button>
           )}
 
-          {/* UI Saat Mengembang (Detail Penuh) */}
           {isMusicExpanded && (
-            <motion.div 
-              initial={{ opacity: 0, width: 0 }} 
-              animate={{ opacity: 1, width: "auto" }} 
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
               className="flex items-center gap-3 overflow-hidden"
             >
               <div className="hidden sm:flex flex-col mr-2 min-w-30 pointer-events-none shrink-0">
@@ -316,10 +311,10 @@ export default function App() {
                 </div>
               </div>
 
-              <button 
+              <button
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors ml-auto border border-white/10 group z-10 cursor-pointer shrink-0"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                   toggleMusic();
                 }}
               >
@@ -330,11 +325,10 @@ export default function App() {
                 )}
               </button>
 
-              {/* Tombol Tutup (Minimize) ke Kanan */}
-              <button 
+              <button
                 className="ml-1 p-1 z-10 cursor-pointer text-gray-400 hover:text-white rounded-full hover:bg-white/10 transition-colors shrink-0"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                   setIsMusicExpanded(false);
                 }}
               >

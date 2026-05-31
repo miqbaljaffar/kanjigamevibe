@@ -19,7 +19,13 @@ export const TIMER_MAP = {
   hard: 7
 };
 
-export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel = 'N5') {
+// 1. Tambahkan parameter onError pada deklarasi hook
+export function useGame(
+  mode: GameMode,
+  difficulty: Difficulty,
+  level: JLPTLevel = 'N5',
+  onError?: (msg: string, type: 'offline' | 'api_limit' | 'unknown') => void
+) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -49,14 +55,35 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
         // Gunakan startMode jika ada, jika tidak kembali ke state mode saat ini
         body: JSON.stringify({ mode: startMode || mode, count: 10, level })
       });
+
+      // 2. Tambahkan pengecekan HTTP Status untuk mendeteksi token habis/server mati
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error("API_LIMIT");
+        } else {
+          throw new Error(`Server error: ${res.status}`);
+        }
+      }
+
       const data = await res.json();
       setQuestions(data);
       setGameState('playing');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal memuat pertanyaan", error);
       setGameState('idle');
+
+      // 3. Lempar error ke Global Error View menggunakan onError
+      if (onError) {
+        if (error.message === "API_LIMIT") {
+          onError("Quota AI Gemini telah habis. Harap tunggu beberapa saat untuk generate kuis lagi.", 'api_limit');
+        } else if (!navigator.onLine || error.message.includes('Failed to fetch')) {
+          onError("Gagal mengunduh soal kuis. Pastikan koneksi internet stabil.", 'offline');
+        } else {
+          onError(`Gagal memproses sistem: ${error.message}`, 'unknown');
+        }
+      }
     }
-  }, [mode, level]);
+  }, [mode, level, onError]); // Pastikan onError masuk ke dependency array
 
   // Fungsi untuk memulai game
   const startGame = (customQuestions?: Question[], customBossImage?: string | null, startMode?: GameMode) => {
@@ -95,7 +122,7 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     // Hentikan timer waktu menjawab
     if (timerRef.current) clearInterval(timerRef.current);
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
-    
+
     // Timer otomatis (setTimeout) DIHAPUS dari sini agar user bisa membaca penjelasan
   };
 
@@ -163,7 +190,7 @@ export function useGame(mode: GameMode, difficulty: Difficulty, level: JLPTLevel
     bossImage,
     startGame,
     handleAnswer,
-    nextQuestion, // Diekspor agar bisa digunakan di UI tombol "Lanjut"
+    nextQuestion,
     restart: () => startGame(),
     endGame
   };
